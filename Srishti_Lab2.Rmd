@@ -49,7 +49,7 @@ covid_data_renamed <- covid_joined_data  %>%
 
 
 ```{r}
-ggplot(covid_data_renamed, aes(x = log(population_density), y = death_rate)) +s
+ggplot(covid_data_renamed, aes(x = log(population_density), y = death_rate)) +geom_point()+
   geom_smooth(se = FALSE) +
   labs(title = "Deaths by population density", x = "Log of Population Density", y = "Death rate per 100K")
 
@@ -65,7 +65,7 @@ data.frame(covid_data_renamed$State,covid_data_renamed$mask_mandate_rank,covid_d
 
 
 ```{r}
-ggplot(covid_data_renamed, aes(x = mask_mandate_rank, y = death_rate)) +
+ggplot(covid_data_renamed, aes(x = mask_mandate_rank, y = death_in_last_7)) +
   geom_point() +
   geom_smooth(se = FALSE) +
   labs(title = "Deaths by Mask Mandate Rank", x = "Mask Mandate Rank", y = "Death rate per 100K")
@@ -73,35 +73,11 @@ ggplot(covid_data_renamed, aes(x = mask_mandate_rank, y = death_rate)) +
 
 
 ```{r}
-ggplot(covid_data_renamed, aes(x = mask_enforced_by_charge+mask_enforced_by_fines , y = death_rate)) +
+ggplot(covid_data_renamed, aes(x = mask_enforced_by_fines+mask_enforced_by_charge , y = death_rate)) +
   geom_point() +
   geom_smooth(se = FALSE) +
   labs(title = "Deaths by Mask Enforcement", x = "Mask Enforcement", y = "Death rate per 100K")
 ```
-
-```{r}
-covid_stay_home_policies_data<-read.csv("covid policies stay home.csv")
-
-covid_stay_home_policies_data_joined<-left_join(
-  covid_data,
-  covid_stay_home_policies_data, 
-by=c("State"))
-
-```
-
-```{r}
-covid_stay_home_policies_data_renamed <- covid_stay_home_policies_data_joined  %>% 
-  rename(
-      death_rate = "Death.Rate.per.100000",
-      mask_mandated = 'Mandate.face.mask.use.by.all.individuals.in.public.spaces.y',
-      mask_enforced_by_fines = 'Face.mask.mandate.enforced.by.fines',
-      mask_enforced_by_charge = 'Face.mask.mandate.enforced.by.criminal.charge.citation',
-      no_legal_mask_enforcement = 'No.legal.enforcement.of.face.mask.mandate.y',
-      public_facing_employee_mask = 'Mandate.face.mask.use.by.employees.in.public.facing.businesses.y',
-      population_density = 'Population.density.per.square.miles')
-
-```
-
 
 ```{r}
 covid_data_renamed$stay_at_home_length<-ifelse(covid_data_renamed$stay_at_home_begin==0,
@@ -122,6 +98,41 @@ ggplot(covid_data_renamed, aes(x = stay_at_home_length , y = death_rate)) +
   geom_point() +
   geom_smooth(se = FALSE) +
   labs(title = "Deaths by Stay at home length", x = "Stay at home length", y = "Death rate per 100K")
+```
+
+```{r}
+
+covid_data_renamed$all_mobility_changes <- covid_data_renamed$retail_mobility_change+
+    covid_data_renamed$grocery_pharm_mobility_change+
+    covid_data_renamed$parks_mobility_change+
+    covid_data_renamed$transit_mobility_change+
+    covid_data_renamed$workplaces_mobility_change+
+    covid_data_renamed$residential_mobility_change
+  
+covid_data_renamed$mobility_population_dens <- covid_data_renamed$population_density*covid_data_renamed$all_mobility_changes
+
+covid_data_renamed$mobility_with_mask <- covid_data_renamed$mask_mandate_rank*covid_data_renamed$all_mobility_changes
+```
+
+```{r}
+ggplot(covid_data_renamed, aes(x = log(mobility_population_dens) , y = death_rate)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(title = "Deaths by Stay at home length", x = "Mobility with Population", y = "Death rate per 100K")
+```
+
+```{r}
+ggplot(covid_data_renamed, aes(x = all_mobility_changes , y = death_rate)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(title = "Deaths by Stay at home length", x = "All Mobility Changes", y = "Death rate per 100K")
+```
+
+```{r}
+ggplot(covid_data_renamed, aes(x = mobility_with_mask , y = death_rate)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(title = "Deaths by Stay at home length", x = "Mobility Changes with mask mandate", y = "Death rate per 100K")
 ```
 
 ```{r}
