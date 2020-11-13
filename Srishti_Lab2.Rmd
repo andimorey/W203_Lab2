@@ -1,0 +1,146 @@
+---
+title: "Srishti_Lab2"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(dplyr)
+```
+
+```{r}
+covid_data<-read.csv("covid-19.csv",skip=1)
+covid_masks_policies_data<-read.csv("covid policies masks.csv")
+
+covid_joined_data<-left_join(
+  covid_data,
+  covid_masks_policies_data, 
+by=c("State"))
+
+```
+
+```{r}
+covid_data_renamed <- covid_joined_data  %>% 
+  rename(
+      total_deaths = "Total.Deaths",
+      death_in_last_7 = "Deaths.in.Last.7.Days",
+      death_rate = "Death.Rate.per.100000",
+      death_rate_in_last_7 = "Death.Rate.per.100K.in.Last.7.Days",
+      mask_mandated = 'Mandate.face.mask.use.by.all.individuals.in.public.spaces.y',
+      mask_enforced_by_fines = 'Face.mask.mandate.enforced.by.fines',
+      mask_enforced_by_charge = 'Face.mask.mandate.enforced.by.criminal.charge.citation',
+      no_legal_mask_enforcement = 'No.legal.enforcement.of.face.mask.mandate.y',
+      public_facing_employee_mask = 'Mandate.face.mask.use.by.employees.in.public.facing.businesses.y',
+      population_density = 'Population.density.per.square.miles',
+      stay_at_home_begin = 'Stay.at.home..shelter.in.place',
+      stay_at_home_end = 'End.stay.at.home.shelter.in.place',
+      retail_mobility_change ='Retail...recreation',
+      grocery_pharm_mobility_change='Grocery...pharmacy',
+      parks_mobility_change='Parks',
+      transit_mobility_change = 'Transit.stations',
+      workplaces_mobility_change = 'Workplaces',
+      residential_mobility_change = 'Residential')
+
+```
+
+
+```{r}
+ggplot(covid_data_renamed, aes(x = log(population_density), y = death_rate)) +s
+  geom_smooth(se = FALSE) +
+  labs(title = "Deaths by population density", x = "Log of Population Density", y = "Death rate per 100K")
+
+```
+
+```{r}
+covid_data_renamed$mask_mandate_rank<-ifelse(covid_data_renamed$mask_mandated==0,60,rank(as.Date.factor(covid_data_renamed$mask_mandated, format = "%m/%d/%Y")))
+```
+
+```{r}
+data.frame(covid_data_renamed$State,covid_data_renamed$mask_mandate_rank,covid_data_renamed$mask_mandated)
+```
+
+
+```{r}
+ggplot(covid_data_renamed, aes(x = mask_mandate_rank, y = death_rate)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(title = "Deaths by Mask Mandate Rank", x = "Mask Mandate Rank", y = "Death rate per 100K")
+```
+
+
+```{r}
+ggplot(covid_data_renamed, aes(x = mask_enforced_by_charge+mask_enforced_by_fines , y = death_rate)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(title = "Deaths by Mask Enforcement", x = "Mask Enforcement", y = "Death rate per 100K")
+```
+
+```{r}
+covid_stay_home_policies_data<-read.csv("covid policies stay home.csv")
+
+covid_stay_home_policies_data_joined<-left_join(
+  covid_data,
+  covid_stay_home_policies_data, 
+by=c("State"))
+
+```
+
+```{r}
+covid_stay_home_policies_data_renamed <- covid_stay_home_policies_data_joined  %>% 
+  rename(
+      death_rate = "Death.Rate.per.100000",
+      mask_mandated = 'Mandate.face.mask.use.by.all.individuals.in.public.spaces.y',
+      mask_enforced_by_fines = 'Face.mask.mandate.enforced.by.fines',
+      mask_enforced_by_charge = 'Face.mask.mandate.enforced.by.criminal.charge.citation',
+      no_legal_mask_enforcement = 'No.legal.enforcement.of.face.mask.mandate.y',
+      public_facing_employee_mask = 'Mandate.face.mask.use.by.employees.in.public.facing.businesses.y',
+      population_density = 'Population.density.per.square.miles')
+
+```
+
+
+```{r}
+covid_data_renamed$stay_at_home_length<-ifelse(covid_data_renamed$stay_at_home_begin==0,
+                                               0,
+                                               ifelse(covid_data_renamed$stay_at_home_begin==0,
+                                                  difftime(Sys.Date(), as.Date.factor(covid_data_renamed$stay_at_home_begin, format = "%m/%d/%Y"), units = "days"),
+                                                  difftime(as.Date.factor(covid_data_renamed$stay_at_home_end, format = "%m/%d/%Y"), as.Date.factor(covid_data_renamed$stay_at_home_begin, format = "%m/%d/%Y"), units = "days"))
+                                                )
+
+```
+
+```{r}
+covid_data_renamed$stay_at_home_length
+```
+
+```{r}
+ggplot(covid_data_renamed, aes(x = stay_at_home_length , y = death_rate)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(title = "Deaths by Stay at home length", x = "Stay at home length", y = "Death rate per 100K")
+```
+
+```{r}
+mobility_changes_dataset <- covid_data_renamed[c("State","death_rate",
+                                    "retail_mobility_change","grocery_pharm_mobility_change",
+                                    "parks_mobility_change","transit_mobility_change",
+                                    "workplaces_mobility_change","residential_mobility_change")]
+mobility_changes_pivoted <- mobility_changes_dataset %>%
+  pivot_longer(!c(State,death_rate), names_to = "mobility_type", values_to = "mobility_change")
+```
+
+
+```{r}
+ggplot(mobility_changes_pivoted, aes(x = mobility_change , y = death_rate,color=mobility_type)) +
+  #geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(title = "Deaths by Mobility Change", x = "Mobility Change", y = "Death rate per 100K")
+```
+
+
+
+

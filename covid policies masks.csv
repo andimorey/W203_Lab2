@@ -1,0 +1,52 @@
+﻿State,State Abbreviation,State FIPS Code,Mandate face mask use by all individuals in public spaces,Face mask mandate enforced by fines,Face mask mandate enforced by criminal charge/citation,No legal enforcement of face mask mandate,Mandate face mask use by employees in public-facing businesses,State ended statewide mask use by individuals in public spaces,Attempt by state government to prevent local governments from implementing face mask orders
+Alabama,AL,1,7/16/20,0,0,1,5/11/20,0,0
+Alaska,AK,2,4/24/20,1,1,0,4/24/20,5/22/20,0
+Arizona,AZ,4,0,0,0,0,5/8/20,0,3/30/20
+Arkansas,AR,5,7/20/20,1,1,0,5/11/20,0,0
+California,CA,6,6/18/20,0,0,1,5/5/20,0,0
+Colorado,CO,8,7/16/20,0,0,0,4/23/20,0,0
+Connecticut,CT,9,4/20/20,0,0,1,4/3/20,0,0
+Delaware,DE,10,4/28/20,1,1,0,5/1/20,0,0
+District of Columbia,DC,11,4/17/20,1,0,0,4/15/20,0,0
+Florida,FL,12,0,0,0,0,5/11/20,0,0
+Georgia,GA,13,0,0,0,0,4/27/20,0,7/15/20
+Hawaii,HI,15,1/0/1900,1,1,0,6/10/20,0,0
+Idaho,ID,16,0,0,0,0,0,0,0
+Illinois,IL,17,5/1/20,1,0,0,5/1/20,0,0
+Indiana,IN,18,7/27/20,0,0,0,5/1/20,0,0
+Iowa,IA,19,0,0,0,0,0,0,0
+Kansas,KS,20,7/3/20,0,0,1,7/3/20,0,0
+Kentucky,KY,21,5/11/20,0,0,1,5/11/20,0,0
+Louisiana,LA,22,0,1,1,0,5/1/20,0,0
+Maine,ME,23,5/1/20,1,0,0,5/1/20,0,0
+Maryland,MD,24,4/18/20,1,1,0,4/18/20,0,0
+Massachusetts,MA,25,5/6/20,1,0,0,5/6/20,0,0
+Michigan,MI,26,4/27/20,1,1,0,4/26/20,0,0
+Minnesota,MN,27,7/24/20,0,0,0,6/1/20,0,0
+Mississippi,MS,28,8/5/20,0,0,1,5/7/20,0,0
+Missouri,MO,29,0,0,0,0,0,0,0
+Montana,MT,30,0,0,0,0,7/15/20,0,0
+Nebraska,NE,31,0,0,0,0,5/4/20,0,5/29/20
+Nevada,NV,32,6/26/20,1,1,0,5/9/20,0,0
+New Hampshire,NH,33,0,0,0,0,5/1/20,0,0
+New Jersey,NJ,34,4/8/20,1,1,0,4/8/20,0,0
+New Mexico,NM,35,5/15/20,0,0,1,5/6/20,0,0
+New York,NY,36,4/17/20,1,0,0,4/17/20,0,0
+North Carolina,NC,37,6/26/20,0,1,0,6/26/20,0,0
+North Dakota,ND,38,0,0,0,0,4/28/20,0,0
+Ohio,OH,39,7/23/20,0,0,1,4/29/20,0,0
+Oklahoma,OK,40,0,0,0,0,0,0,0
+Oregon,OR,41,7/1/20,0,0,1,5/9/20,0,0
+Pennsylvania,PA,42,7/1/20,0,1,0,4/19/20,0,0
+Rhode Island,RI,44,4/18/20,0,0,1,4/18/20,0,0
+South Carolina,SC,45,0,1,1,0,8/3/20,0,0
+South Dakota,SD,46,0,0,0,0,0,0,0
+Tennessee,TN,47,0,0,0,0,0,0,0
+Texas,TX,48,7/3/20,1,0,0,5/8/20,0,4/27/20
+Utah,UT,49,4/10/20,0,0,1,4/10/20,5/1/20,0
+Vermont,VT,50,8/1/20,0,0,1,4/17/20,0,0
+Virginia,VA,51,5/29/20,0,1,0,5/29/20,0,0
+Washington,WA,53,6/26/20,1,1,0,5/4/20,0,0
+West Virginia,WV,54,7/7/20,0,0,1,5/4/20,0,0
+Wisconsin,WI,55,8/1/20,1,0,0,8/1/20,0,0
+Wyoming,WY,56,0,0,0,0,5/1/20,0,0
