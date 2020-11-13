@@ -1,0 +1,180 @@
+---
+title: 'w203 Lab 2'
+author: "Srishti Mehra, David Djambazov, and Andi Morey Peterson"
+date: "11/11/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r read data, echo=FALSE, message=FALSE}
+library(magrittr)
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(openxlsx)
+covid_wb <- createWorkbook()
+addWorksheet(covid_wb, "Covid-19")
+raw_covid_data = read_excel("covid-19.xlsx", sheet = "Covid-19")
+writeData(covid_wb, sheet = 1, x = raw_covid_data, startCol = 1, startRow = 0, colNames = TRUE)
+saveWorkbook(covid_wb, "COVID_CLEAN.xlsx", overwrite = TRUE)
+covid_data = read_excel("COVID_CLEAN.xlsx", sheet = 1)
+file.remove("COVID_CLEAN.xlsx")
+
+
+raw_covid_policy_data = read_excel("COVID-19 US state policy database (CUSP).xlsx",
+                                   sheet = "Face Masks", range = "A1:J52")
+covid_data <- left_join ( covid_data, raw_covid_policy_data, by=c("State"))
+
+
+#make numeric
+covid_data$death_rate_per_100k <- as.numeric(covid_data$`Death Rate per 100K in Last 7 Days`)
+
+```
+
+
+```{r Employee Face Mask EDA, echo=FALSE, message=FALSE}
+covid_data$mask_mandate <- ifelse(covid_data$`Mandate face mask use by employees in public-facing businesses.y` == 0, FALSE, TRUE)
+covid_data %>% 
+  ggplot(aes(x = mask_mandate, y = death_rate_per_100k)) + 
+  geom_boxplot() +   
+  labs(
+    title = 'Employee Mask Mandate to Death Rate', 
+    x = 'Mandate face mask use by employees in public-facing businesses', 
+    y = 'Death Rate per 100k in Last 7 Days'
+  )
+```
+
+```{r Public face Mask EDA, echo=FALSE, message=FALSE}
+covid_data$mask_mandate_public <- ifelse(covid_data$`Mandate face mask use by all individuals in public spaces.y` == 0, FALSE, TRUE)
+covid_data %>% 
+  ggplot(aes(x = mask_mandate_public, y = death_rate_per_100k)) + 
+  geom_boxplot() +   
+  labs(
+    title = 'Public Face Mask Mandate to Death Rate', 
+    x = 'Mandate face mask use by all individuals in public spaces', 
+    y = 'Death Rate per 100k'
+  )
+```
+
+
+```{r Black Percent EDA, echo=FALSE, message=FALSE}
+covid_data$black_pop <- as.numeric(covid_data$`Black % of Total Population...16`)
+covid_data %>% 
+  ggplot(aes(x = black_pop, y = death_rate_per_100k)) + 
+  geom_point() +   
+  geom_smooth(se = FALSE) +
+  labs(
+    title = 'Relation of Black Population to Death Rate', 
+    x = 'Black % of Population', 
+    y = 'Death Rate per 10k'
+  )
+```
+
+```{r Hispanic Percent EDA, echo=FALSE, message=FALSE}
+covid_data$hispanic_pop <- as.numeric(covid_data$`Hispanic % of Total Population...18`)
+covid_data %>% 
+  ggplot(aes(x = hispanic_pop, y = death_rate_per_100k)) + 
+  geom_point() +   
+  geom_smooth(se = FALSE) +
+  labs(
+    title = 'Relation of Hispanic Population to Death Rate', 
+    x = 'Hispanic % of Population', 
+    y = 'Death Rate per 10k'
+  )
+```
+```{r Population Density EDA, echo=FALSE, message=FALSE}
+covid_data$population_density <- as.numeric(covid_data$`Population density per square miles`)
+covid_data %>% 
+  ggplot(aes(x = log(population_density), y = death_rate_per_100k)) + 
+  geom_point() +   
+  geom_smooth(se = FALSE) +
+  labs(
+    title = 'Relation of Population Density to Death Rate', 
+    x = 'Population Density', 
+    y = 'Death Rate per 10k'
+  )
+```
+
+```{r At Risk EDA, echo=FALSE, message=FALSE}
+covid_data$at_risk <- as.numeric(covid_data$`Percent at risk for serious illness due to COVID`)
+covid_data %>% 
+  ggplot(aes(x = at_risk, y = death_rate_per_100k)) + 
+  geom_point() +   
+  geom_smooth(se = FALSE) +
+  labs(
+    title = 'Relation of At Risk to Death Rate', 
+    x = 'Poplation considered at risk', 
+    y = 'Death Rate per 10k'
+  )
+```
+```{r Moblitiy EDA, echo=FALSE, message=FALSE}
+covid_data$retail_mobility <- as.numeric(covid_data$`Retail & recreation`)
+covid_data %>% 
+  ggplot(aes(x = retail_mobility, y = death_rate_per_100k)) + 
+  geom_point() +   
+  geom_smooth(se = FALSE) +
+  labs(
+    title = 'Relation of Retail/Recreation Mobility to Death Rate', 
+    x = 'Mobility: Retail/Recreation', 
+    y = 'Death Rate per 10k'
+  )
+
+covid_data$grocery_mobility <- as.numeric(covid_data$`Grocery & pharmacy`)
+covid_data %>% 
+  ggplot(aes(x = grocery_mobility, y = death_rate_per_100k)) + 
+  geom_point() +   
+  geom_smooth(se = FALSE) +
+  labs(
+    title = 'Relation of Grocery/Pharmacy Mobility to Death Rate', 
+    x = 'Mobility: Grocery/Pharmacy', 
+    y = 'Death Rate per 10k'
+  )
+
+covid_data$parks_mobility <- as.numeric(covid_data$Parks)
+covid_data %>% 
+  ggplot(aes(x = parks_mobility, y = death_rate_per_100k)) + 
+  geom_point() +   
+  geom_smooth(se = FALSE) +
+  labs(
+    title = 'Relation of Park Mobility to Death Rate', 
+    x = 'Mobility: Park', 
+    y = 'Death Rate per 10k'
+  )
+
+
+covid_data$transit_mobility <- as.numeric(covid_data$`Transit stations`)
+covid_data %>% 
+  ggplot(aes(x = transit_mobility, y = death_rate_per_100k)) + 
+  geom_point() +   
+  geom_smooth(se = FALSE) +
+  labs(
+    title = 'Relation of Transit Stations Mobility to Death Rate', 
+    x = 'Mobility: Transit', 
+    y = 'Death Rate per 10k'
+  )
+
+covid_data$workplaces_mobility <- as.numeric(covid_data$Workplaces)
+covid_data %>% 
+  ggplot(aes(x = workplaces_mobility, y = death_rate_per_100k)) + 
+  geom_point() +   
+  geom_smooth(se = FALSE) +
+  labs(
+    title = 'Relation of Workplaces Mobility to Death Rate', 
+    x = 'Mobility: Workplaces', 
+    y = 'Death Rate per 10k'
+  )
+
+covid_data$residential_mobility <- as.numeric(covid_data$Residential)
+covid_data %>% 
+  ggplot(aes(x = residential_mobility, y = death_rate_per_100k)) + 
+  geom_point() +   
+  geom_smooth(se = FALSE) +
+  labs(
+    title = 'Relation of Residential Mobility to Death Rate', 
+    x = 'Mobility: Residential', 
+    y = 'Death Rate per 10k'
+  )
+```
