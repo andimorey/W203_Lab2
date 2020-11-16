@@ -62,8 +62,10 @@ hist(covid_data$death_rate_per_100k, breaks = 15,
 
 The distribution for "death rate" is skewed to the left. -- *Need more discussion here*
 
-```{r Employee Face Mask EDA, echo=FALSE, message=FALSE}
-covid_data$mask_mandate <- ifelse(covid_data$`Mandate face mask use by employees in public-facing businesses.y` == 0, FALSE, TRUE)
+```{r Employee Face Mask EDA, fig.height=3}
+covid_data$mask_mandate <- 
+  ifelse(covid_data$`Mandate face mask use by employees in public-facing businesses.y`
+         == 0, FALSE, TRUE)
 covid_data %>% 
   ggplot(aes(x = mask_mandate, y = death_rate_per_100k)) + 
   geom_boxplot() +   
@@ -74,10 +76,12 @@ covid_data %>%
   )
 ```
 
-Here there seems to be a difference between states that do have a face mask mandate for employees and those who don't.  This seems significant enough to try in or initial model.
+Here there seems to be a difference between states that do have a face mask mandate for employees and those who don't.  This seems significant enough to try in our initial model.
 
-```{r Public face Mask EDA, echo=FALSE, message=FALSE}
-covid_data$mask_mandate_public <- ifelse(covid_data$`Mandate face mask use by all individuals in public spaces.y` == 0, FALSE, TRUE)
+```{r Public face Mask EDA, , fig.height=3}
+covid_data$mask_mandate_public <- 
+  ifelse(covid_data$`Mandate face mask use by all individuals in public spaces.y` == 0,
+         FALSE, TRUE)
 covid_data %>% 
   ggplot(aes(x = mask_mandate_public, y = death_rate_per_100k)) + 
   geom_boxplot() +   
@@ -90,8 +94,11 @@ covid_data %>%
 
 The same can be said for the Public Face Mask Mandate.  Let's see if we operationalize these together:
 
-```{r Face Mask EDA, echo=FALSE, message=FALSE}
-covid_data$mask_mandates <- ifelse(covid_data$`Mandate face mask use by all individuals in public spaces.y` == 0, ifelse(covid_data$`Mandate face mask use by employees in public-facing businesses.y` == 0, FALSE, TRUE), TRUE)
+```{r Face Mask EDA, fig.height=3}
+covid_data$mask_mandates <- 
+  ifelse(covid_data$`Mandate face mask use by all individuals in public spaces.y` == 0,
+  ifelse(covid_data$`Mandate face mask use by employees in public-facing businesses.y` 
+         == 0, FALSE, TRUE), TRUE)
 
 covid_data %>% 
   ggplot(aes(x = mask_mandates, y = death_rate_per_100k)) + 
@@ -115,4 +122,13 @@ model1 <- lm(death_rate_per_100k ~ mask_mandates, data = covid_data)
 coeftest(model1, vcov = vcovHC)
 ```
 
-Here we can see the coefficient of the mask_mandates is significant, but not highly, with the p-value at 0.01345.  Practically speaking, it says that having either type of a face mask mandate (public or employee) is associated with a reduction of 0.25 deaths per 100k people, or 2.5 deaths per 1 million people. 
+Here we can see the coefficient of the mask_mandates is significant, but not highly, with the p-value at 0.01345.  Practically speaking, it says that having either type of a face mask mandate (public or employee) is associated with a reduction of 0.25 deaths per 100k people, or 2.5 deaths per 1 million people.
+
+```{r Model 1 Residuals}
+hist(model1$residuals, breaks = 10, main = "Residuals from Linear Model 1 Predicting Death Rate") # Histogram of the Residuals
+plot(model1, which=2) # QQ Plot of Residuals
+#plot(model1, which=3) # Heteroskedasticity (looking for a straight line)
+#plot(model1, which=5) # Cook's distance
+```
+
+When we plot the residuals of our first model, we can see that it isn't quite normal, with one particular state (North Dakota) having a residual above 1.
