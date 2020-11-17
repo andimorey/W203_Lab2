@@ -114,17 +114,23 @@ Actual model: $$death\_rate = \beta_0 + \beta_1 workplace\ mobility\ changes + \
 
 Direction of Bias: With $\beta_2$ negative (i.e. increasing work from home option will be associated with decrease in death rate) and work from home options to be negatively correlated with workplace mobility changes (i.e. increasing work from home options will decrease workplace mobility), the actual coefficient of mandate will be more negative than expected and the direction of bias will be toward zero. 
 
-3. The third variable we want to consider as one that could be introducing omitted variable bias is 'diabetic population'. This variable will reflect what percentage of the population has diabetes. 'Diabetic population' is correlated with 'x65' as diabetes is a condition more often observed in later stages of life than earlier and it can also be a determinant of the death rate in 100K in the last 7 days as it has known to introduce co-morbidities in patients of Covid-19. 
+3. The third variable we want to consider as one that could be introducing omitted variable bias is 'diabetic population'. This variable will reflect what percentage of the population has diabetes. 'Type 2 Diabetic population' is correlated with 'white population' as type 2 diabetes is a condition more often observed common in non-white populations and it can also be a determinant of the death rate in 100K in the last 7 days as it has known to introduce co-morbidities in patients of Covid-19. 
 
-Estimated model: $$death\_rate = \beta_0 + \beta_1 population\ over\ 65 + w $$
-Actual model: $$death\_rate = \beta_0 + \beta_1 population\ over\ 65 + \beta_2 diabetes\ population + \omega $$
+Estimated model: $$death\_rate = \beta_0 + \beta_1 white\ population + w $$
+Actual model: $$death\_rate = \beta_0 + \beta_1 white\ population+ \beta_2 diabetes\ population + \omega $$
 
-Direction of Bias: With $\beta_2$ positive (i.e. higher population of people with diabetes associated with higher death rate) and diabetes population positively correlated with population over 65, the actual coefficient of mandate will be lesser positive than expected and the direction of bias will be away from zero.  
+Direction of Bias: With $\beta_2$ positive (i.e. higher population of people with diabetes associated with higher death rate) and diabetes population negatively correlated with white population, the actual coefficient of mandate will be more positive than expected and the direction of bias will be toward zero.  
 
-4. The fourth variable we want to consider as one that could be introducing omitted variable bias is 'party of the governor of the state'. This variable will reflect the political party that the state's governor belongs to. This will be correlated with the mask mandate as democratic party governor were more keen and quick on imposing mask mandates as compared to the republican party governors. Also, states with population that support the republican party took Covid-19 more lightly from the beginning and their lower concern or guard could heighten death rates. 
-Representing democratic party as 1 and republican party as 0.
+4. The fourth variable we want to consider as one that could be introducing omitted variable bias is 'percent of Donald Trump supporters'. This variable will population of people that support Donald Trump. This will be correlated with the work mobility as reluctance on Donald Trump's part to pay heed to Covid is reflected in his supporters actions as well. Also, states with population that support the republican party took Covid-19 more lightly from the beginning and their lower concern or guard could heighten death rates. 
 
 Estimated model: $$death\_rate = \beta_0 + mask\ mandate + w $$
-Actual model: $$death\_rate = \beta_0 + mask\ mandate + \beta_2 governor\ party + \omega $$
+Actual model: $$death\_rate = \beta_0 + mask\ mandate + \beta_2 population\ supporting\ Donald\ Trump + \omega $$
 
-Direction of Bias: With $\beta_2$ negative (i.e. higher party value [democratic] associated with lower death rate) and governor party positively correlated with mask mandate, the actual coefficient of mandate will be lesser negative than expected and the direction of bias will be away from zero.
+Direction of Bias: With $\beta_2$ positive (i.e. higher percentage of Donald Trump supporters associated with higher death rates) and positive correlation with work mobility (higher percentage of Donald Trump supporters associated with lesser negative changes in work mobility), the actual coefficient of mandate will be lesser positive than expected and the direction of bias will be away from zero.
+
+5. The fifth variable we want to consider as one that could be introducing omitted variable bias is 'population with heart disease'. This variable will reflect what percentage of the population has heart disease. 'Population with heart disease' is correlated with 'white population' it is more common in non-white minority populations and it can also be a determinant of the death rate in 100K in the last 7 days as it has known to introduce co-morbidities in patients of Covid-19. 
+
+Estimated model: $$death\_rate = \beta_0 + \beta_1 white\ population + w $$
+Actual model: $$death\_rate = \beta_0 + \beta_1 white\ population+ \beta_2 population\ with\ heart\ disease + \omega $$
+
+Direction of Bias: With $\beta_2$ positive (i.e. higher population of people with heart disease associated with higher death rate) and population with heart disease negatively correlated with white population, the actual coefficient of mandate will be more positive than expected and the direction of bias will be toward zero.  
