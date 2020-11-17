@@ -1,0 +1,123 @@
+---
+title: "model2_3_regression_ov"
+output: html_document
+---
+
+```{r}
+covid_raw_data<-read.csv("covid-19.csv",skip=1)
+covid_masks_policies_data<-read.csv("covid policies masks.csv")
+
+covid_data<-left_join(
+  covid_raw_data,
+  covid_masks_policies_data)
+```
+
+```{r}
+covid_data <- covid_data  %>% 
+  rename(
+      death_rate_in_last_7 = "Death.Rate.per.100K.in.Last.7.Days",
+      mask_for_all_mandated_on = 'Mandate.face.mask.use.by.all.individuals.in.public.spaces',
+      mask_enforced_by_fines = 'Face.mask.mandate.enforced.by.fines',
+      mask_enforced_by_charge = 'Face.mask.mandate.enforced.by.criminal.charge.citation',
+      no_legal_mask_enforcement = 'No.legal.enforcement.of.face.mask.mandate',
+      mask_for_public_facing_employee_mandated_on = 'Mandate.face.mask.use.by.employees.in.public.facing.businesses',
+      population_density = 'Population.density.per.square.miles',
+      stay_at_home_begin = 'Stay.at.home..shelter.in.place',
+      stay_at_home_end = 'End.stay.at.home.shelter.in.place',
+      retail_mobility_change ='Retail...recreation',
+      grocery_pharm_mobility_change='Grocery...pharmacy',
+      parks_mobility_change='Parks',
+      transit_mobility_change = 'Transit.stations',
+      workplaces_mobility_change = 'Workplaces',
+      residential_mobility_change = 'Residential',
+      white_percent = 'White...of.Total.Population',
+      x65='X65.'
+      )
+
+covid_data$repgov <- grepl("(R)",covid_data$Governor)
+
+```
+
+```{r Death Rate EDA}
+#make numeric
+covid_data$death_rate_per_100k_last_7 <- as.numeric(covid_data$death_rate_in_last_7)
+```
+
+We will add workplaces_mobility_change in model 2. From the correlations table, workplaces_mobility_change and mask_for_all_mandated_on are not highly correlated so we know there is no multi-collinearlity. 
+
+```{r Model 2}
+model2 <- lm(death_rate_per_100k_last_7 ~ mask_mandate_public + workplaces_mobility_change, data = covid_data)
+coeftest(model2, vcov = vcovHC)
+```
+
+The coefficient of the mask_mandates in this model is not significant, with a p-value at 0.06389. Practically speaking, it says that having a face mask mandate for the public, keeping workplace mobility changes constant, is associated with a reduction of ~0.2 deaths per 100k people, or ~2 deaths per 1 million people. 
+The coefficient of the workplaces_mobility_change in this model is not significant either, with a p-value at 0.10547.  Practically speaking, it says that having a one unit change in workplace mobility, keeping mask mandates for public constant, is associated with an increase of 0.007 deaths per 100k people, or 7 deaths per 100 million people. 
+
+Now that we have observed two human actions that could have affected the death rate in 100K in last 7 days, we will add population factors in our model 3, particularly: population density, percentage of population that is white, and percentage of population over 65 years of age. 
+
+We choose work mobility here because we think that is one that can be acted upon that could have an impact. On reading about factors of social closeness that matter for Covid-19 transmission or the intensity of the infection caught by someone, a major one is the viral load. This is higher when people are spend long periods of time in closed areas with those carrying the coronavirus. In parks, we are not in closed areas, in retail, there isn't an extended period of time spent since people are coming in and going out more frequently than at work. Grocery and pharmacies are necessities so they cannot be changed much and transit and residential mobility changes are very particular to each city so coming up with a blanket policy or plan to tackle those might be difficult. 
+
+There is no perfect multi-collinearilty in the variables used as explanatory variables in this model but there is some correlation between population_density and  white_percent () and workplaces_mobility_change and white_percent (). This might affect the weight on the coefficients as they might either share the weight or it might weigh heavily on one over the other. We need to keep this instability in mind while reading the results from model 3. 
+
+```{r Model 3}
+model3 <- lm(death_rate_per_100k_last_7 ~ mask_mandate_public + workplaces_mobility_change + population_density + white_percent + x65, data = covid_data)
+coeftest(model3, vcov = vcovHC)
+```
+
+The coefficient of the mask_mandates in this model is not significant, with a p-value at 0.07858. Practically speaking, it says that having a face mask mandate for the public, keeping workplace mobility changes constant, is associated with a reduction of ~0.2 deaths per 100k people, or ~2 deaths per 1 million people.
+
+The coefficient of the workplaces_mobility_change in this model is not significant either, with a p-value at 0.48149.  Practically speaking, it says that having a one unit change in workplace mobility, keeping all other explanatory variables constant, is associated with an increase of ~0.007 deaths per 100k people, or ~7 deaths per 100 million people. 
+
+The coefficient of the population_density in this model is not significant either, with a p-value at 0.94986.  Practically speaking, it says that every unit increase in population density,  all other explanatory variables constant, is associated with a decrease of ~4e-06 deaths per 100k people, or ~4 deaths per 100 billion people. 
+
+The coefficient of the white_percent in this model is not significant either, with a p-value at 0.35335.  Practically speaking, it says that having a one extra percent of the population being white, keeping all other explanatory variables constant, is associated with an increase of ~0.3 deaths per 100k people, or ~3 deaths per 1 million people. 
+
+The coefficient of the x65 in this model is not significant either, with a p-value at 0.10633.  Practically speaking, it says that every unit increase in population percentage of people over 65 years of age,  all other explanatory variables constant, is associated with a decrease of ~3 deaths per 100k people, or ~30 deaths per 1 million people. 
+
+We very clearly see the impact on the coefficients since the variables are correlated. We will see if keeping only one of the population attributes: percentage of population over 65 years of age can give us a better description of death rate in 100K in the last 7 days. 
+
+```{r Model 4}
+model4 <- lm(death_rate_per_100k_last_7 ~ mask_mandate_public + workplaces_mobility_change + x65, data = covid_data)
+coeftest(model4, vcov = vcovHC)
+```
+
+The coefficient of the mask_mandates in this model is not significant, with a p-value at 0.0594838. Practically speaking, it says that having a face mask mandate for the public, keeping workplace mobility changes constant, is associated with a reduction of ~0.2 deaths per 100k people, or ~2 deaths per 1 million people.
+
+The coefficient of the workplaces_mobility_change in this model is somewhat significant, with a p-value at 0.0129828.  Practically speaking, it says that having a one unit decrease in workplace mobility, keeping all other explanatory variables constant, is associated with an decrease of ~0.01 deaths per 100k people, or ~10 deaths per 100 million people. 
+
+The coefficient of the x65 in this model is not significant either and not a whole lot of practical significance either (even when compared to the coefficient resulted in model 3), with a p-value at 0.0768657.  Practically speaking, it says that every unit increase in population percentage of people over 65 years of age,  all other explanatory variables constant, is associated with a decrease of ~3 deaths per 100k people, or ~30 deaths per 1 million people. 
+
+###Regression Table
+
+```{r}
+stargazer(model1,model2, model3, model4,
+          type="text",
+          se = list( sqrt(diag(vcovHC(model1))),sqrt(diag(vcovHC(model2))) ,sqrt(diag(vcovHC(model3)))) ,
+          column.labels = c("model1","model2","model3"))
+```
+
+We see adding more variables decreases the residual standard errors, but not by a large amount. We also see that Adjusted R2 increases a bit from model1 to model2 but not a whole lot from model2 to model3. The residuals convey that there are explanations we have not covered in our models that can describe the death rate in 100K in the last 7 days better. We will evaluate one of the omitted variables that could improve the model. 
+
+###Omitted Variable
+
+1. The first variable we want to consider as one that could be introducing omitted variable bias is 'Mask Adoption'. Mask Adoption will be a variable that reflects what percentage of the population is wearing masks and to what extent or in what capacities (all day, when they go to populous places, when they are around anybody, etc). Mask Adoption is correlated with Mask Mandates as those states with mandates will expect to see higher mask adoption than states without mask mandates. Mask Adoption can also be a determinant of the death rate in 100K in the last 7 days as masks reduce potential exposure risk from an infected person whether they have symptoms or not and lower exposure, lower case rate would have an impact on the death rate. 
+
+Estimated model: $$death\_rate = \tilde\beta_0 + \tilde\beta_1 mandate + w $$
+Actual model: $$death\_rate = \beta_0 + \beta_1 mandate + \beta_2 adoption + \omega $$
+
+Direction of Bias: With $\beta_2$ expected to be negative (i.e. higher adoption would be associated with a decrease in death rate in 100K in the last 7 days) and mask adoption and mask mandate expected to be positively correlated, the actual coefficient of mandate will be lesser negative than expected and the direction of bias will be away from zero. 
+
+2. The second variable we want to consider as one that could be introducing omitted variable bias is 'work from home availability'. This variable will reflect what percentage of the population has the option or has a mandate to work from home. 'Work from home availability' is correlated with 'workplace mobility changes' and can also be a determinant of the death rate in 100K in the last 7 days as it would reduce the number of people who could possibly be spending extended hours in a close setting with the virus carriers and increasing viral load and therefore severity.
+
+Estimated model: $$death\_rate = \tilde\beta_0 + \tilde\beta_1 workplace\ mobility\ changes + w $$
+Actual model: $$death\_rate = \beta_0 + \beta_1 workplace\ mobility\ changes + \beta_2 work\ from\ home\ option + \omega $$
+
+Direction of Bias: With $\beta_2$ negative (i.e. increasing work from home option will be associated with decrease in death rate) and work from home options to be negatively correlated with workplace mobility changes (i.e. increasing work from home options will decrease workplace mobility), the actual coefficient of mandate will be more negative than expected and the direction of bias will be toward zero. 
+
+3. The third variable we want to consider as one that could be introducing omitted variable bias is 'diabetic population'. This variable will reflect what percentage of the population has diabetes. 'Diabetic population' is correlated with 'x65' as diabetes is a condition more often observed in later stages of life than earlier and it can also be a determinant of the death rate in 100K in the last 7 days as it has known to introduce co-morbidities in patients of Covid-19. 
+
+Estimated model: $$death\_rate = \beta_0 + \beta_1 population\ over\ 65 + w $$
+Actual model: $$death\_rate = \beta_0 + \beta_1 population\ over\ 65 + \beta_2 diabetes\ population + \omega $$
+
+Direction of Bias: With $\beta_2$ positive (i.e. higher population of people with diabetes associated with higher death rate) and diabetes population positively correlated with population over 65, the actual coefficient of mandate will be lesser positive than expected and the direction of bias will be away from zero.  
+
