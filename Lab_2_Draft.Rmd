@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Many states have issues mandates for their citizens to wear masks in public and additionally, many states have issues mandates for employees who interact with the public to wear masks.  Now that cases have surged in the United States, we ask: *Do state-wide facemask mandates correlate with the reduction in the amount of deaths in that state?* 
 
-Because these mandates and other variables occur in a different times during the nine-month period, we will operationalize the variable "deaths" as the *Death Rate per 100,000  in the past 7 days* (ending Oct. 30th).  Total deaths is inappropriate, as the population per state varies widely, skewing the data in largely populated states.  The total death rate per 100,000 is also inappropriate, as many states had large first waves in the beginning of the year which will skew the current state of the pandemic.  Using the current data (the past 7 days) will give a good analysis if the mandates are working *currently*.
+Because these mandates and other variables occur in a different times during the nine-month period, and the states were affected by the virus in different times as well, we will operationalize the variable "deaths" as the *Death Rate per 100,000  in the past 7 days* (ending Oct. 30th). Total deaths is inappropriate, as the population per state varies widely, skewing the data in largely populated states.  The total death rate per 100,000 is also inappropriate, as many states had large first waves in the beginning of the year which will skew the current state of the pandemic.  Using the current data (the past 7 days) will give a good analysis if the mandates are working *currently*.
 
 We will operationalize "mandates" in two ways, as TRUE/FALSE indicators.  One will be if the state mandates for their citizens to wear masks in public the other is if the states have issued mandates for employees who interact with the public to wear masks.
 
@@ -33,6 +33,10 @@ library(stargazer)
 library(lmtest)
 library(sandwich)
 library(patchwork)
+```
+
+*can we remove and add the next portion instead?*
+```{r}
 covid_wb <- createWorkbook()
 addWorksheet(covid_wb, "Covid-19")
 raw_covid_data = read_excel("covid-19.xlsx", sheet = "Covid-19")
@@ -48,13 +52,49 @@ covid_data <- left_join ( covid_data, raw_covid_policy_data, by=c("State"))
 
 ```
 
+```{r}
+covid_raw_data<-read.csv("covid-19.csv",skip=1)
+covid_masks_policies_data<-read.csv("covid policies masks.csv")
+
+covid_data<-left_join(
+  covid_raw_data,
+  covid_masks_policies_data)
+```
+
+
+```{r}
+covid_data <- covid_data  %>% 
+  rename(
+      death_rate_in_last_7 = "Death.Rate.per.100K.in.Last.7.Days",
+      mask_for_all_mandated_on = 'Mandate.face.mask.use.by.all.individuals.in.public.spaces',
+      mask_enforced_by_fines = 'Face.mask.mandate.enforced.by.fines',
+      mask_enforced_by_charge = 'Face.mask.mandate.enforced.by.criminal.charge.citation',
+      no_legal_mask_enforcement = 'No.legal.enforcement.of.face.mask.mandate',
+      mask_for_public_facing_employee_mandated_on = 'Mandate.face.mask.use.by.employees.in.public.facing.businesses',
+      population_density = 'Population.density.per.square.miles',
+      stay_at_home_begin = 'Stay.at.home..shelter.in.place',
+      stay_at_home_end = 'End.stay.at.home.shelter.in.place',
+      retail_mobility_change ='Retail...recreation',
+      grocery_pharm_mobility_change='Grocery...pharmacy',
+      parks_mobility_change='Parks',
+      transit_mobility_change = 'Transit.stations',
+      workplaces_mobility_change = 'Workplaces',
+      residential_mobility_change = 'Residential',
+      white_percent = 'White...of.Total.Population',
+      x65='X65.'
+      )
+
+covid_data$repgov <- grepl("(R)",covid_data$Governor)
+
+```
+
 # Initial Exploratory Data Analysis (EDA)
 
 First, we want to take a look at the first variable we want to describe *Death Rate per 100K in the Last 7 Days*
 
 ```{r Death Rate EDA}
 #make numeric
-covid_data$death_rate_per_100k <- as.numeric(covid_data$`Death Rate per 100K in Last 7 Days`)
+covid_data$death_rate_per_100k_last_7 <- as.numeric(covid_data$death_rate_in_last_7)
 
 hist(covid_data$death_rate_per_100k, breaks = 15,
      main = "Histogram of Death Rates Per 100k in the Last 7 Days")
@@ -63,11 +103,10 @@ hist(covid_data$death_rate_per_100k, breaks = 15,
 The distribution for "death rate" is skewed to the left. -- *Need more discussion here*
 
 ```{r Employee Face Mask EDA, fig.height=3}
-covid_data$mask_mandate <- 
-  ifelse(covid_data$`Mandate face mask use by employees in public-facing businesses.y`
-         == 0, FALSE, TRUE)
+covid_data$mask_mandate_employees_in_public <- ifelse(covid_data$mask_for_public_facing_employee_mandated_on == 0, FALSE, TRUE)
+
 covid_data %>% 
-  ggplot(aes(x = mask_mandate, y = death_rate_per_100k)) + 
+  ggplot(aes(x = mask_mandate_employees_in_public, y = death_rate_per_100k_last_7)) + 
   geom_boxplot() +   
   labs(
     title = 'Employee Mask Mandate to Death Rate', 
@@ -78,12 +117,11 @@ covid_data %>%
 
 Here there seems to be a difference between states that do have a face mask mandate for employees and those who don't.  This seems significant enough to try in our initial model.
 
-```{r Public face Mask EDA, , fig.height=3}
-covid_data$mask_mandate_public <- 
-  ifelse(covid_data$`Mandate face mask use by all individuals in public spaces.y` == 0,
-         FALSE, TRUE)
+```{r Public face Mask EDA, fig.height=3}
+covid_data$mask_mandate_public <- ifelse(covid_data$mask_for_all_mandated_on == 0, FALSE, TRUE)
+
 covid_data %>% 
-  ggplot(aes(x = mask_mandate_public, y = death_rate_per_100k)) + 
+  ggplot(aes(x = mask_mandate_public, y = death_rate_per_100k_last_7)) + 
   geom_boxplot() +   
   labs(
     title = 'Public Face Mask Mandate to Death Rate', 
@@ -95,13 +133,10 @@ covid_data %>%
 The same can be said for the Public Face Mask Mandate.  Let's see if we operationalize these together:
 
 ```{r Face Mask EDA, fig.height=3}
-covid_data$mask_mandates <- 
-  ifelse(covid_data$`Mandate face mask use by all individuals in public spaces.y` == 0,
-  ifelse(covid_data$`Mandate face mask use by employees in public-facing businesses.y` 
-         == 0, FALSE, TRUE), TRUE)
+covid_data$mask_mandates <- ifelse(covid_data$mask_for_all_mandated_on == 0, ifelse(covid_data$mask_for_public_facing_employee_mandated_on == 0, FALSE, TRUE), TRUE)
 
 covid_data %>% 
-  ggplot(aes(x = mask_mandates, y = death_rate_per_100k)) + 
+  ggplot(aes(x = mask_mandates, y = death_rate_per_100k_last_7)) + 
   geom_boxplot() +   
   labs(
     title = 'Any Face Mask Mandate to Death Rate', 
@@ -118,7 +153,7 @@ Our first model will use the variables we looked at in the initial EDA.
 
 $$death\_rate = \beta_0 + \beta_1 mandate + w \tag{1}$$
 ```{r Model 1}
-model1 <- lm(death_rate_per_100k ~ mask_mandates, data = covid_data)
+model1 <- lm(death_rate_per_100k_last_7 ~ mask_mandates, data = covid_data)
 coeftest(model1, vcov = vcovHC)
 ```
 
