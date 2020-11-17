@@ -1,0 +1,83 @@
+---
+title: "lab2_david"
+author: "David Djambazov"
+date: "11/15/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(magrittr)
+library(ggplot2)
+library(patchwork)
+library(sandwich)
+library(lmtest)
+library(stargazer)
+library(corrplot)
+theme_set(theme_minimal())
+knitr::opts_chunk$set(dpi = 200, fig.width = 7, fig.height = 4)
+```
+
+```{r}
+covid_data <- read.csv("covid-19-dd.csv",skip=1)
+policy <- read.csv("covid policies masks.csv")
+
+covid <- left_join(
+                    covid_data,
+                    policy)
+```
+
+```{r}
+covid <- covid  %>% 
+  rename(
+      case_rt = "Case.Rate.per.100000",
+      total_deaths = "Total.Deaths",
+      death_last7 = "Deaths.in.Last.7.Days",
+      death_rt = "Death.Rate.per.100000",
+      death_rt_last7 = "Death.Rate.per.100K.in.Last.7.Days",
+      tests_100K = "Tests.per.100K",
+      white_per = "White.per.of.Total.Population",
+      mask_mandated = 'Mandate.face.mask.use.by.all.individuals.in.public.spaces',
+      mask_fines = 'Face.mask.mandate.enforced.by.fines',
+      mask_charge = 'Face.mask.mandate.enforced.by.criminal.charge.citation',
+      no_legal_mask = 'No.legal.enforcement.of.face.mask.mandate',
+      public_facing_mask = 'Mandate.face.mask.use.by.employees.in.public.facing.businesses',
+      pop_density = 'Population.density.per.square.miles',
+      stay_at_home_begin = 'Stay.at.home..shelter.in.place',
+      stay_at_home_end = 'End.stay.at.home.shelter.in.place',
+      retail_mob ='Retail...recreation',
+      grocery_mob ='Grocery...pharmacy',
+      parks_mob ='Parks',
+      transit_mob = 'Transit.stations',
+      work_mob = 'Workplaces',
+      residential_mob = 'Residential')
+
+```
+
+```{r}
+car::scatterplotMatrix(covid[,c("death_rt","tests_100K","pop_density")])
+```
+
+```{r}
+covid_num <- covid[,c("State","Governor","case_rt", "death_rt", "death_rt_last7", "tests_100K", "white_per", "X65", "pop_density", "no_legal_mask", "work_mob", "retail_mob")]
+```
+
+```{r}
+covid_num$repgov <- grepl("(R)",covid_num$Governor)
+
+```
+
+```{r}
+cor_mat <- cor(covid_num[,c("case_rt", "death_rt", "death_rt_last7", "tests_100K", "white_per", "X65", "pop_density", "no_legal_mask", "work_mob", "retail_mob", "repgov")])
+
+corrplot(cor_mat,method = "color", order = "AOE",
+        diag=FALSE, addCoef.col = "white", addCoefasPercent = TRUE)
+```
+
+```{r}
+plot(covid_num$case_rt,covid_num$death_rt_last7)
+```
+
+```{r}
+plot(log(covid_num$pop_density),covid_num$work_mob)
+```
