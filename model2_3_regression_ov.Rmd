@@ -121,3 +121,10 @@ Actual model: $$death\_rate = \beta_0 + \beta_1 population\ over\ 65 + \beta_2 d
 
 Direction of Bias: With $\beta_2$ positive (i.e. higher population of people with diabetes associated with higher death rate) and diabetes population positively correlated with population over 65, the actual coefficient of mandate will be lesser positive than expected and the direction of bias will be away from zero.  
 
+4. The fourth variable we want to consider as one that could be introducing omitted variable bias is 'party of the governor of the state'. This variable will reflect the political party that the state's governor belongs to. This will be correlated with the mask mandate as democratic party governor were more keen and quick on imposing mask mandates as compared to the republican party governors. Also, states with population that support the republican party took Covid-19 more lightly from the beginning and their lower concern or guard could heighten death rates. 
+Representing democratic party as 1 and republican party as 0.
+
+Estimated model: $$death\_rate = \beta_0 + mask\ mandate + w $$
+Actual model: $$death\_rate = \beta_0 + mask\ mandate + \beta_2 governor\ party + \omega $$
+
+Direction of Bias: With $\beta_2$ negative (i.e. higher party value [democratic] associated with lower death rate) and governor party positively correlated with mask mandate, the actual coefficient of mandate will be lesser negative than expected and the direction of bias will be away from zero.
