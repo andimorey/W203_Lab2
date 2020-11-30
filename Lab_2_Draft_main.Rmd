@@ -13,7 +13,7 @@ knitr::opts_chunk$set(dpi = 300, fig.width = 9, fig.height = 5)
 
   A common recommendation from doctors, scientists, and politicians is to wear face masks or other facial coverings to combat the spread of COVID-19. The World Health Organization states: "Masks are a key measure to suppress transmission and save lives. Masks reduce potential exposure risk from an infected person whether they have symptoms or not. People wearing masks are protected from getting infected. Masks also prevent onward transmission when worn by a person who is infected." Because we have not actually performed a controlled study/experiment, we want to build a descriptive model with data available about the current pandemic. 
 
-Many states have issues mandates for their citizens to wear masks in public and additionally, many states have issues mandates for employees who interact with the public to wear masks.  Now that cases have surged in the United States, we ask: *Do state-wide facemask mandates correlate with the reduction in the amount of deaths in that state?* 
+Many states have issues mandates for their citizens to wear masks in public and additionally, many states have issues mandates for employees who interact with the public to wear masks.  Now that cases have surged in the United States (When this was written in November of 2020), we ask: *Do state-wide facemask mandates correlate with the reduction in the amount of deaths in that state due to COVID-19?* 
 
 Because these mandates and other variables occur in a different times during the nine-month period, and the states were affected by the virus in different times as well, we will operationalize the variable "deaths" as the *Death Rate per 100,000  in the past 7 days* (ending Oct. 30th). The *total deaths* variable is inappropriate, as the population per state varies widely, skewing the data in largely populated states.  The total death rate per 100,000 is also inappropriate, as many states had large first waves in the beginning of the year which will skew the current state of the pandemic.  Using the current data (the past 7 days) will give a good analysis if the mandates are working *currently*.
 
@@ -98,8 +98,8 @@ covid_corr <- covid_corr  %>%
 
 cor_mat <- cor(covid_corr[,c("case_rt", "case_rt7", "death_rt", "death_rt7", "white", "x65", "pop_dens", "mask_mandate_all", "work_mob", "retail_mob", "repgov")])
 
-corrplot(cor_mat,method = "color", order = "AOE",
-        diag=FALSE, addCoef.col = "white", addCoefasPercent = TRUE)
+corrplot(cor_mat, method = "color", title = "Correlation Matrix Visualization of Mask Mandates",
+        order = "AOE", diag=FALSE, addCoef.col = "white", addCoefasPercent = TRUE)
 ```
 
 An interesting pattern that emerges from the above correlation table is that the overall death rate and the death rate over the last 7 days have opposing relationships with a number of variables such as mobility, mask mandates and white population percentage. That seems to be indicative of something we've suspected in approaching the research question. Perhaps the states that suffered the worst of the first wave are not the states that are suffering now. And while in the first wave measures would have come too late to save the victims of the initial outburst of COVID-19, now the picture is changed.
@@ -128,6 +128,8 @@ There seems to be a separation that would make using this relationship for our f
 
 # Model 1
 
+Our first model will only look at the death rate in past 7 days per 100k people and a boolean indicator on wheather or not mandates for face masks are in place:
+
 $$death\_rate_7 = \beta_0 + \beta_1 mandate + w \tag{1}$$
 ```{r Model 1}
 model1 <- lm(death_rate_in_last7 ~ mask_mandate_all, data = covid_data)
@@ -137,17 +139,20 @@ coeftest(model1, vcov = vcovHC)
 Here we can see the coefficient of the mask_mandates is statistically significant with a p-value less than 0.01. Practically speaking, it says that having a face mask mandate for all is associated with a reduction of 0.21 deaths per 100k people per 7 days, or 2.1 deaths per 1 million people per 7 days.
 
 ```{r Model 1 Residuals}
-hist(model1$residuals, breaks = 10, main = "Residuals from Linear Model 1 Predicting Death Rate in last 7 days") # Histogram of the Residuals
-plot(model1, which=2) # QQ Plot of Residuals
+hist(model1$residuals, breaks = 10, 
+     main = "Residuals from Linear Model 1 Predicting Death Rate in last 7 days") # Histogram of the Residuals
+plot(model1, which=2) # QQ Plot of Residuals (How do we get QQ plot to show States rather than ID's?)
 #plot(model1, which=3) # Heteroskedasticity (looking for a straight line)
 #plot(model1, which=5) # Cook's distance
 ```
 
-When we plot the residuals of our first model, we can see that it isn't quite normal, with one particular state (North Dakota) having a residual above 1. Then again we don't see clear evidence of violations of assumptions 2 or 4.
+When we plot the residuals of our first model, we can see that it isn't quite normal, with one particular state (North Dakota) having a residual above 1, which is quite high given that the median is below 0.5. Then again we don't see clear evidence of violations of assumptions 2 or 4.
 
 # Models 2-4
 
 We will add workplaces_mobility_change in model 2. From the correlations table, workplaces_mobility_change and mask_mandate_all seem not highly correlated so there shouldn't be any collinearity 
+
+We choose work mobility here because we think that is one that can be acted upon that could have an impact. On reading about factors of social closeness that matter for COVID-19 transmission or the intensity of the infection caught by someone, a major one is the viral load. This is higher when people are spend long periods of time in closed areas with those carrying the coronavirus. In parks, we are not in closed areas, in retail, there isn't an extended period of time spent since people are coming in and going out more frequently than at work. Grocery and pharmacies are necessities so they cannot be changed much and transit and residential mobility changes are very particular to each city so coming up with a blanket policy or plan to tackle those might be difficult. 
 
 $$death\_rate_7 = \beta_0 + \beta_1 mandate + \beta_2 workplace\_mobility + w \tag{2}$$
 
@@ -157,8 +162,6 @@ coeftest(model2, vcov = vcovHC)
 ```
 
 Interestingly, we lose statistical significance on both coefficients. For the mask mandates we have a p-value of 0.09983 and for change in workplace mobility we have a p-value of 0.06736. This could indicate that underneath may be an omitted variable that is affecting both (such as not believing in COVID-19 or its health consequences, resulting in both lack of mask mandates and changes in workplace mobility).
-
-We choose work mobility here because we think that is one that can be acted upon that could have an impact. On reading about factors of social closeness that matter for COVID-19 transmission or the intensity of the infection caught by someone, a major one is the viral load. This is higher when people are spend long periods of time in closed areas with those carrying the coronavirus. In parks, we are not in closed areas, in retail, there isn't an extended period of time spent since people are coming in and going out more frequently than at work. Grocery and pharmacies are necessities so they cannot be changed much and transit and residential mobility changes are very particular to each city so coming up with a blanket policy or plan to tackle those might be difficult. 
 
 Now that we have observed two human actions that could have affected the death rate in 100K in last 7 days, we will add population factors in our model 3, particularly: population density, percentage of population that is white, and percentage of population over 65 years of age.
 
@@ -190,10 +193,38 @@ The coefficient of the x65 in this model is not significant either with a p-valu
 # Limitations Our Model 
 
 1. IID
-The question here is whether the observations for each different state are IID. One way that assumption might be challenged is because of some type of clustering of conditions in neighboring states for example. While that is a danger and of course some similarities do exist, it seems valid to argue that the connections between states are not such that one state can truly or easily influence the course of the epidemic in another state, either directly through policy (since all state policy is the domain of the local state government) or through demographic factors. That said perhaps travel between well-connected neighboring states can be a source of contagion (e.g. NY/NJ), so we need to be wary.
+The question here is whether the observations for each different state are IID. One way that assumption might be challenged is because of some type of clustering of conditions in neighboring states for example. While that is a danger and of course some similarities do exist, it seems valid to argue that the connections between states are not such that one state can truly or easily influence the course of the epidemic in another state, either directly through policy (since all state policy is the domain of the local state government) or through demographic factors. That said perhaps travel between well-connected neighboring states can be a source of contagion (e.g. NY/NJ), so we need to be wary, as this impacts the "independant" portion of IID.
 
 2. Linear Conditional Expectation
 This is an issue that is very specific to the variables that we're choosing. Ideally, we'd be looking at the residuals of our models. One potential factor to worry about is the exponential nature of epidemics. That might mean that since the timing of the epidemic might be different in different states, we might be looking at different points on an exponential curve.
+
+```{r Linear Conditional Expectation}
+covid_data <- covid_data %>%
+  mutate(model4_residuals = resid(model4))
+covid_data <- covid_data %>%
+  mutate(model4_predictions = predict(model4))
+
+plot_1 <- covid_data %>%
+  ggplot(aes(x = workplaces_mobility_change, y = model4_residuals)) + 
+  geom_point() + stat_smooth(se=TRUE) + 
+  labs(
+    title = 'Model Residuals vs. Workplace Mobility',
+    x = 'Workplace Mobility',
+    y = 'Model Residuals'
+  )
+
+plot_2 <- covid_data %>%
+  ggplot(aes(x = model4_predictions, y = model4_residuals)) + 
+  geom_point() + stat_smooth(se=TRUE) + 
+  labs(
+    title = 'Model Residuals vs. Model Predictions',
+    x = 'Model Predictions',
+    y = 'Model Residuals'
+  )
+
+plot_1 | plot_2
+```
+
 
 3. No perfect Collinearity
 The correlation table in our EDA gives us a clear indication that we're safe in that regard. While groups of variables have clear relationships (such as the different mobility categories), none of them are perfectly colinear.
@@ -201,8 +232,20 @@ The correlation table in our EDA gives us a clear indication that we're safe in 
 4. Homoskedastic Conditional Errors
 This assumption can be affected by issues with assumption 2. If there is a problem with 2, it is likely to show up here as well. Another issue could be skewness of the data. We see in the EDA that there is a bit of skew in the distribution of our outcome variable. Here it seems to not be too bad and we are somewhat safer as we are looking at the death rate over 7 days. Never-the-less, if as we mentioned in 2, there are major discrepancies between states in terms of the exponential growth of the epidemic, there could be orders of magnitude differences in rates and that could be a significant issue. Helpful tools could be transforming the variable (taking a log for example) as well as using robust errors.
 
+```{r Homoskedastic Conditional Errors}
+lmtest::bptest(model4)
+plot(model4, which=3)
+```
+
 5. Normality of the errors
 According to the Gauss-Markov Theorem under assumptions 1-4 we still have OLS as the best linear unbiased estimator. How much should we worry about assumption number 5. Well, we will be updating this section as soon as the async catches up with the lesson on assumption 5. Meanwhile we are running some Q-Q plots of our residuals and if they seem sufficiently particularly away from normality, we'll have to consider the implications in terms of choosing our variables.
+
+```{r Normality of the Errors}
+hist(model4$residuals, breaks = 10, 
+     main = "Residuals from Linear Model 4") # Histogram of the Residuals
+plot(model4, which=2) # QQ Plot of Residuals
+```
+
 
 # Regression Table
 
@@ -217,6 +260,7 @@ We see adding more variables decreases the residual standard errors, but not by 
 
 # Discussion of Omitted Variables
 
+### Mask Adoption
 1. The first variable we want to consider as one that could be introducing omitted variable bias is 'Mask Adoption'. Mask Adoption will be a variable that reflects what percentage of the population is wearing masks and to what extent or in what capacities (all day, when they go to populous places, when they are around anybody, etc.). Mask Adoption is correlated with Mask Mandates as those states with mandates will expect to see higher mask adoption than states without mask mandates. Mask Adoption can also be a determinant of the death rate in 100K in the last 7 days as masks reduce potential exposure risk from an infected person whether they have symptoms or not and lower exposure, lower case rate would have an impact on the death rate. 
 
 Estimated model: $$death\_rate_7 = \tilde\beta_0 + \tilde\beta_1 mandate + w $$
@@ -224,6 +268,7 @@ Actual model: $$death\_rate_7 = \beta_0 + \beta_1 mandate + \beta_2 adoption + \
 
 Direction of Bias: With $\beta_2$ expected to be negative (i.e. higher adoption would be associated with a decrease in death rate in 100K in the last 7 days) and mask adoption and mask mandate expected to be positively correlated, the actual coefficient of mandate will be lesser negative than expected and the direction of bias will be away from zero. 
 
+### Work from Home Availablility
 2. The second variable we want to consider as one that could be introducing omitted variable bias is 'work from home availability'. This variable will reflect what percentage of the population has the option or has a mandate to work from home. 'Work from home availability' is correlated with 'workplace mobility changes' and can also be a determinant of the death rate in 100K in the last 7 days as it would reduce the number of people who could possibly be spending extended hours in a close setting with the virus carriers and increasing viral load and therefore severity.
 
 Estimated model: $$death\_rate_7 = \tilde\beta_0 + \tilde\beta_1 workplace\ mobility\ changes + w $$
@@ -231,6 +276,7 @@ Actual model: $$death\_rate_7 = \beta_0 + \beta_1 workplace\ mobility\ changes +
 
 Direction of Bias: With $\beta_2$ negative (i.e. increasing work from home option will be associated with decrease in death rate) and work from home options to be negatively correlated with workplace mobility changes (i.e. increasing work from home options will decrease workplace mobility), the actual coefficient of mandate will be more negative than expected and the direction of bias will be toward zero. 
 
+### Diabetic Population
 3. The third variable we want to consider as one that could be introducing omitted variable bias is 'diabetic population'. This variable will reflect what percentage of the population has diabetes. 'Type 2 Diabetic population' is correlated with 'white population' as type 2 diabetes is a condition more often observed common in non-white populations and it can also be a determinant of the death rate in 100K in the last 7 days as it has known to introduce co-morbidities in patients of COVID-19. 
 
 Estimated model: $$death\_rate_7 = \beta_0 + \beta_1 white\ population + w $$
@@ -238,6 +284,7 @@ Actual model: $$death\_rate_7 = \beta_0 + \beta_1 white\ population+ \beta_2 dia
 
 Direction of Bias: With $\beta_2$ positive (i.e. higher population of people with diabetes associated with higher death rate) and diabetes population negatively correlated with white population, the actual coefficient of mandate will be more positive than expected and the direction of bias will be toward zero.  
 
+### Donald Trump Supporters
 4. The fourth variable we want to consider as one that could be introducing omitted variable bias is 'percent of Donald Trump supporters'. This variable will population of people that support Donald Trump. This will be correlated with the work mobility as reluctance on Donald Trump's part to pay heed to COVID-19 is reflected in his supporters' actions as well. Also, states with population that support the republican party took COVID-19 more lightly from the beginning and their lower concern or guard could heighten death rates. 
 
 Estimated model: $$death\_rate_7 = \beta_0 + mask\ mandate + w $$
@@ -245,6 +292,7 @@ Actual model: $$death\_rate_7 = \beta_0 + mask\ mandate + \beta_2 population\ su
 
 Direction of Bias: With $\beta_2$ positive (i.e. higher percentage of Donald Trump supporters associated with higher death rates) and positive correlation with work mobility (higher percentage of Donald Trump supporters associated with lesser negative changes in work mobility), the actual coefficient of mandate will be lesser positive than expected and the direction of bias will be away from zero.
 
+### Population with Heart Disease
 5. The fifth variable we want to consider as one that could be introducing omitted variable bias is 'population with heart disease'. This variable will reflect what percentage of the population has heart disease. 'Population with heart disease' is correlated with 'white population' it is more common in non-white minority populations and it can also be a determinant of the death rate in 100K in the last 7 days as it has known to introduce co-morbidities in patients of COVID-19. 
 
 Estimated model: $$death\_rate_7 = \beta_0 + \beta_1 white\ population + w $$
