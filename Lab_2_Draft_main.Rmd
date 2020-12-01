@@ -254,6 +254,12 @@ For model 3 we will follow the approach of keeping one human controllable variab
 
 We will add x65 (indicates the percent of people over 65 years of age in the population) and percent_at_risk (indicates the percent of people in the population who are at risk of serious illness if infected by the Coronavirus). Both are population parameters that are not controllable by humans. 
 
+Our reasons for considering these three variables are as follows:
+
+x65 - Being older has historically weakened people's immune systems and ability to fight an infection. These have resulted in higher death rate in age groups over 65 years all over the world. This could inform our death rate over the last 7 days. 
+
+percent_at_risk - Groups with people who have an existing illness like Diabetes or Heart Disease have seen higher death rates due to the lack of immunity and fighting resources available in the body to fight the coronavirus. Covid-19 also seems to worsen the existing co-morbities that people with such diseases have, making them susceptible to death by the virus. 
+
 $$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + \beta_3\ x65 + \beta_4\ percent\_at\_risk+ u \tag{3}$$
 
 ```{r Model 3}
