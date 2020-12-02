@@ -119,12 +119,13 @@ There is some skew, but perhaps we can argue that it's not too severe. Let's see
 
 covid_data %>% 
   ggplot(aes(x = mask_mandate_all, y = death_rate_in_last7)) + 
-  geom_boxplot() +   
+  geom_boxplot(fill = 'lightblue', color = 'midnightblue') + 
   labs(
     title = 'Separation in last 7-day death rate by mask mandate', 
     x = 'Mandate face mask use by all in public', 
     y = 'Death Rate per 100k in Last 7 Days'
   )
+
 ```
 There seems to be a separation that would make using this relationship for our first model interesting.
 
@@ -132,7 +133,7 @@ There seems to be a separation that would make using this relationship for our f
 
 Our first model will only look at the death rate in past 7 days per 100k people and a boolean indicator on wheather or not mandates for face masks are in place:
 
-$$death\_rate_7 = \beta_0 + \beta_1 mandate + w \tag{1}$$
+$$death\_rate_7 = \beta_0 + \beta_1 mandate + w \tag{Model 1}$$
 ```{r Model 1}
 model1 <- lm(death_rate_in_last7 ~ mask_mandate_all, data = covid_data)
 coeftest(model1, vcov = vcovHC)
@@ -143,12 +144,12 @@ Here we can see the coefficient of the mask_mandates is statistically significan
 ```{r Model 1 Residuals}
 hist(model1$residuals, breaks = 10, 
      main = "Residuals from Linear Model 1 Predicting Death Rate in last 7 days") # Histogram of the Residuals
-plot(model1, which=2) # QQ Plot of Residuals (How do we get QQ plot to show States rather than ID's?)
-#plot(model1, which=3) # Heteroskedasticity (looking for a straight line)
-#plot(model1, which=5) # Cook's distance
+plot(model1, which=2, 
+     main = "QQ Plot of Model 1 Residuals", 
+     labels.id = state.name) # QQ Plot of Residuals
 ```
 
-When we plot the residuals of our first model, we can see that it isn't quite normal, with one particular state (North Dakota) having a residual above 1, which is quite high given that the median is below 0.5. Then again we don't see clear evidence of violations of assumptions 2 or 4.
+When we plot the residuals of our first model, we can see that it isn't quite normal, with one particular state (Ohio) having a residual above 1, which is quite high given that the median is below 0.5. Then again we don't see clear evidence of violations of assumptions 2 or 4.
 
 # Model 2
 
@@ -245,7 +246,7 @@ We will use white population percentage as our additional variable in model 2 be
 1. We see variance in it over states so a change in it could indicate differences in our outcome variable
 2. There seems to be some relationship between it and the outcome variable
 
-$$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + w \tag{2}$$
+$$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + w \tag{Model 2}$$
 ```{r Model 2}
 model2 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent, data = covid_data)
 coeftest(model2, vcov = vcovHC)
@@ -262,7 +263,7 @@ For model 3 we will follow the approach of keeping one human controllable variab
 We will add x65 (indicates the percent of people over 65 years of age in the population) and percent_at_risk (indicates the percent of people in the population who are at risk of serious illness if infected by the Coronavirus). Both are population parameters that are not controllable by humans. 
 
 
-$$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + \beta_3\ x65 + \beta_4\ percent\_at\_risk+ u \tag{3}$$
+$$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + \beta_3\ x65 + \beta_4\ percent\_at\_risk+ u \tag{Model 3}$$
 
 ```{r Model 3}
 model3 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent + x65 + percent_at_risk, data = covid_data)
@@ -278,7 +279,7 @@ For model 4 we will add an additional human controllable variable since we alrea
 We choose work mobility here because we think that is one that can be acted upon that could have an impact. On reading about factors of social closeness that matter for COVID-19 transmission or the intensity of the infection caught by someone, a major one is the viral load. This is higher when people are spend long periods of time in closed areas with those carrying the coronavirus. In parks, we are not in closed areas, in retail, there isn't an extended period of time spent since people are coming in and going out more frequently than at work. Grocery and pharmacies are necessities so they cannot be changed much and transit and residential mobility changes are very particular to each city so coming up with a blanket policy or plan to tackle those might be difficult. 
 
 $$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + \beta_3\ x65 $$
-$$+ \beta_4 workplaces\_mobility\_change + v \tag{3}$$
+$$+ \beta_4 workplaces\_mobility\_change + v \tag{Model 4}$$
 
 ```{r Model 4}
 model4 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent  + x65 + workplaces_mobility_change, data = covid_data)
@@ -313,6 +314,24 @@ plot_1 <- covid_data %>%
   )
 
 plot_2 <- covid_data %>%
+  ggplot(aes(x = x65, y = model4_residuals)) + 
+  geom_point() + stat_smooth(se=TRUE) + 
+  labs(
+    title = 'Model Residuals vs. Percent over 65',
+    x = 'Percent over 6',
+    y = 'Model Residuals'
+  )
+
+plot_3 <- covid_data %>%
+  ggplot(aes(x = white_percent, y = model4_residuals)) + 
+  geom_point() + stat_smooth(se=TRUE) + 
+  labs(
+    title = 'Model Residuals vs. White Percent',
+    x = 'White Percent',
+    y = 'Model Residuals'
+  )
+
+plot_4 <- covid_data %>%
   ggplot(aes(x = model4_predictions, y = model4_residuals)) + 
   geom_point() + stat_smooth(se=TRUE) + 
   labs(
@@ -321,7 +340,8 @@ plot_2 <- covid_data %>%
     y = 'Model Residuals'
   )
 
-plot_1 | plot_2
+(plot_1 | plot_2) /
+(plot_3 | plot_4)
 ```
 
 
