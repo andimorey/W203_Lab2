@@ -242,9 +242,7 @@ covid_data %>%
 
 ```
 
-We will use white population percentage as our additional variable in model 2 because: 
-1. We see variance in it over states so a change in it could indicate differences in our outcome variable
-2. There seems to be some relationship between it and the outcome variable
+We will use white population percentage as our additional variable in model 2 because we see variance in it over states so a change in it could indicate differences in our outcome variable.
 
 $$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + w \tag{Model 2}$$
 ```{r Model 2}
@@ -253,6 +251,8 @@ coeftest(model2, vcov = vcovHC)
 ```
 
 Here we can see the coefficient of the mask_mandates is still statistically significant with a p-value less than 0.05. Practically speaking, it says that having a face mask mandate for all, while controlling the white population percentage, is associated with a reduction of ~0.19 deaths per 100k people per 7 days, or ~1.9 deaths per 1 million people per 7 days. The white_percent is not statistically significant with a p-value greater than 0.05. Practically, it's effect is that a 1% increase in the percentage of white population would result in 0.3 additional deaths per 100K people per 7 days, or additional 3 deaths per 1 million people per 7 days.
+
+The coefficient for white_percent here might not be answering what we want to observe. The data is at state level, not patient, to be able to see the effect of a certain race (or any one different from it) on the death rate. We picked this variable because of background knowledge we gathered about people of color and people in minorities being hit worse by the pandemic than others. It could be reflecting another aspect, may be that more diverse states have more robust healthcare systems and service providers which have helped to lower death rate. So we will be cautious about how we use this coefficient to understand our question.
 
 # Models 3, 4
 
