@@ -1,5 +1,5 @@
 ---
-title: "Lab 2 Draft Report"
+title: "Can Mask Mandates Help Lower the COVID-19 Death Rate?"
 author: "Srishti Mehra, Andi Morey Peterson, and David Djambazov"
 date: "11/14/2020"
 output: pdf_document
@@ -11,7 +11,7 @@ knitr::opts_chunk$set(dpi = 300, fig.width = 9, fig.height = 5)
 
 # Introduction
 
-  A common recommendation from doctors, scientists, and politicians is to wear face masks or other facial coverings to combat the spread of COVID-19. The World Health Organization states: "Masks are a key measure to suppress transmission and save lives. Masks reduce potential exposure risk from an infected person whether they have symptoms or not. People wearing masks are protected from getting infected. Masks also prevent onward transmission when worn by a person who is infected." Because we have not actually performed a controlled study/experiment, we want to build a descriptive model with data available about the current pandemic. 
+  A common recommendation from doctors, scientists, and politicians is to wear face masks or other facial coverings to combat the spread of COVID-19. The World Health Organization states: "Masks are a key measure to suppress transmission and save lives. Masks reduce potential exposure risk from an infected person whether they have symptoms or not. People wearing masks are protected from getting infected. Masks also prevent onward transmission when worn by a person who is infected." We now have been in this pandamic for nearly 9 months, so with the data currently available, we want to build a causal model with data available about the current pandemic. 
 
 Many states have issues mandates for their citizens to wear masks in public and additionally, many states have issues mandates for employees who interact with the public to wear masks.  Now that cases have surged in the United States (When this was written in November of 2020), we ask: *Do state-wide facemask mandates correlate with the reduction in the amount of deaths in that state due to COVID-19?* 
 
@@ -21,7 +21,7 @@ Another important consideration for our choice of outcome variable is that state
 
 We will operationalize "mandates", as TRUE/FALSE indicators.
 
-As we move through the model, we will do some descriptive analysis on other variables that may interact with the main question.  These variables include: population density, racial diversity, political leanings, mobility, etc.  We will analyze each of these variables to come up with a final model to determine if and how much face masks are currently reducing death rates of citizens due to COVID-19. 
+As we move through the model, we will do some causal analysis on other variables that may interact with the main question.  These variables include: population density, racial diversity, political leanings, mobility, etc.  We will analyze each of these variables to come up with a final model to determine if and how much face masks are currently reducing death rates of citizens due to COVID-19. 
 
 ## Import the data
 
@@ -38,7 +38,7 @@ library(patchwork)
 library(corrplot)
 ```
 
-```{r import data}
+```{r import data, message=FALSE}
 covid_raw_data<-read.csv("covid-19.csv",skip=1)
 covid_masks_policies_data<-read.csv("covid policies masks.csv")
 
@@ -60,7 +60,6 @@ covid_data <- covid_data  %>%
       mask_enforced_by_fines = 'Face.mask.mandate.enforced.by.fines',
       mask_enforced_by_charge = 'Face.mask.mandate.enforced.by.criminal.charge.citation',
       no_legal_mask_enforcement = 'No.legal.enforcement.of.face.mask.mandate',
-      mask_for_public_facing_employee_mandated_on = 'Mandate.face.mask.use.by.employees.in.public.facing.businesses',
       population_density = 'Population.density.per.square.miles',
       stay_at_home_begin = 'Stay.at.home..shelter.in.place',
       stay_at_home_end = 'End.stay.at.home.shelter.in.place',
@@ -71,7 +70,7 @@ covid_data <- covid_data  %>%
       workplaces_mobility_change = 'Workplaces',
       residential_mobility_change = 'Residential',
       white_percent = 'White...of.Total.Population',
-      x65='X65.',
+      percent_over_65='X65.',
       percent_at_risk='Percent.at.risk.for.serious.illness.due.to.COVID'
       )
 
@@ -83,7 +82,11 @@ covid_data$mask_mandate_all <- ifelse(or(covid_data$mask_for_all_mandated_on == 
 
 Let us take a look at a correlation table of a number of interesting variables.
 ```{r Corr Table EDA}
-covid_corr <- covid_data[,c("State","case_rate", "case_rate_in_last7", "death_rate", "death_rate_in_last7", "white_percent", "x65", "percent_at_risk", "population_density", "mask_mandate_all", "workplaces_mobility_change", "retail_mobility_change", "repgov")]
+covid_corr <- covid_data[,c("State","case_rate", "case_rate_in_last7", "death_rate", 
+                            "death_rate_in_last7", "white_percent", "percent_over_65", 
+                            "percent_at_risk", "population_density", 
+                            "mask_mandate_all", "workplaces_mobility_change",
+                            "retail_mobility_change", "repgov")]
 
 covid_corr <- covid_corr  %>% 
   rename(
@@ -98,10 +101,13 @@ covid_corr <- covid_corr  %>%
           per_risk = "percent_at_risk"
   )
 
-cor_mat <- cor(covid_corr[,c("case_rt", "case_rt7", "death_rt", "death_rt7", "white", "x65","per_risk", "pop_dens", "mask_mandate_all", "work_mob", "retail_mob", "repgov")])
+cor_mat <- cor(covid_corr[,c("case_rt", "case_rt7", "death_rt", "death_rt7", "white", 
+                             "percent_over_65","per_risk", "pop_dens", "mask_mandate_all", 
+                             "work_mob", "retail_mob", "repgov")])
 
-corrplot(cor_mat, method = "color", title = "Correlation Matrix Visualization of Mask Mandates",
-        order = "AOE", diag=FALSE, addCoef.col = "white", addCoefasPercent = TRUE)
+corrplot(cor_mat, method = "color", order = "AOE", diag=FALSE, addCoef.col = "white", 
+         addCoefasPercent = TRUE)
+mtext("Correlation Matrix Visualization of Mask Mandates", side=3, adj=0, cex=1.0)
 ```
 
 An interesting pattern that emerges from the above correlation table is that the overall death rate and the death rate over the last 7 days have opposing relationships with a number of variables such as mobility, mask mandates and white population percentage. That seems to be indicative of something we've suspected in approaching the research question. Perhaps the states that suffered the worst of the first wave are not the states that are suffering now. And while in the first wave measures would have come too late to save the victims of the initial outburst of COVID-19, now the picture is changed.
@@ -143,10 +149,10 @@ Here we can see the coefficient of the mask_mandates is statistically significan
 
 ```{r Model 1 Residuals}
 hist(model1$residuals, breaks = 10, 
-     main = "Residuals from Linear Model 1 Predicting Death Rate in last 7 days") # Histogram of the Residuals
-plot(model1, which=2, 
-     main = "QQ Plot of Model 1 Residuals", 
-     labels.id = state.name) # QQ Plot of Residuals
+     main = "Residuals from Linear Model 1 Predicting Death Rate in last 7 days")
+plot(model1, which=2,
+     sub.caption = "QQ Plot of Model 1 Residuals", 
+     labels.id = state.name) # QQ Plot of Residual
 ```
 
 When we plot the residuals of our first model, we can see that it isn't quite normal, with one particular state (Ohio) having a residual above 1, which is quite high given that the median is below 0.5. Then again we don't see clear evidence of violations of assumptions 2 or 4.
@@ -155,23 +161,24 @@ When we plot the residuals of our first model, we can see that it isn't quite no
 
 Since we had a human controlled variable in the first model to describe, we will add a variable that is a population parameter, not human controllable in model 2. We do this because we think all human controlled variables will influence one another and create instability in the model. Moreover, we want to be able to control for the mask mandate and describe our outcome variable, this will not be possible if another variable that is highly correlated with the mask mandate is also in the model. We will therefore add a variable that will add us to control for both the mask mandate and the population parameter variable. 
 
-Variables being considered: x65 (indicates the percent of people over 65 years of age in the population), white (indicates the percent of people in the population who are of the white race), and percent_at_risk (indicates the percent of people in the population who are at risk of serious illness if infected by the Coronavirus)
+Variables being considered: *percent_over_65* (indicates the percent of people over 65 years of age in the population), white (indicates the percent of people in the population who are of the white race), and *percent_at_risk* (indicates the percent of people in the population who are at risk of serious illness if infected by the Coronavirus).
 
 Our reasons for considering these three variables are as follows:
 
-x65 - Being older has historically weakened people's immune systems and ability to fight an infection. These have resulted in higher death rate in age groups over 65 years all over the world. This could inform our death rate over the last 7 days. 
+*percent_over_65* - Being older has historically weakened people's immune systems and ability to fight an infection. These have resulted in higher death rate in age groups over 65 years all over the world. This could inform our death rate over the last 7 days. 
 
-white_percent - We have read from other studies that have controlled variables like income and insurance to show that some races have had higher death rates due to Covid than others. 
+*white_percent* - We have read from other studies that have controlled variables like income and insurance to show that some races have had higher death rates due to COVID-19 than others. 
 
-percent_at_risk - Groups with people who have an existing illness like Diabetes or Heart Disease have seen higher death rates due to the lack of immunity and fighting resources available in the body to fight the coronavirus. Covid-19 also seems to worsen the existing co-morbities that people with such diseases have, making them susceptible to death by the virus. 
+*percent_at_risk* - Groups with people who have an existing illness like Diabetes or Heart Disease have seen higher death rates due to the lack of immunity and fighting resources available in the body to fight the coronavirus. COVID-19 also seems to worsen the existing co-morbities that people with such diseases have, making them susceptible to death by the virus. 
 
 
-Distribution of x65 across states:
+Distribution of *percent_over_65* across states:
 ```{r}
 covid_data %>% 
-  ggplot(aes(x = State, y = x65)) + geom_point() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggplot(aes(x = State, y = percent_over_65)) + geom_point() + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   labs(
-    title = 'Population percentage with age over 65 Mobility Changes across states', 
+    title = 'Population percentage with age over 65 across states', 
     x = 'State', 
     y = 'Population percentage with age over 65'
   ) 
@@ -181,7 +188,7 @@ Distribution of last 7-day death rate by population percentage with age over 65:
 ```{r}
 
 covid_data %>% 
-  ggplot(aes(x = (x65), y = death_rate_in_last7)) + 
+  ggplot(aes(x = (percent_over_65), y = death_rate_in_last7)) + 
   geom_point() +  geom_smooth() +
   labs(
     title = 'Distribution of last 7-day death rate by population percentage with age over 65', 
@@ -194,7 +201,8 @@ covid_data %>%
 Distribution of white population percentage across states:
 ```{r}
 covid_data %>% 
-  ggplot(aes(x = State, y = white_percent)) + geom_point() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggplot(aes(x = State, y = white_percent)) + geom_point() + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   labs(
     title = 'White population percentate Mobility Changes across states', 
     x = 'State', 
@@ -220,7 +228,8 @@ Distribution for percentage of population at risk of serious illness across stat
 
 ```{r}
 covid_data %>% 
-  ggplot(aes(x = State, y = percent_at_risk)) + geom_point() + theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ggplot(aes(x = State, y = percent_at_risk)) + geom_point() + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   labs(
     title = 'Percentage of population at risk of serious illness across states', 
     x = 'State', 
@@ -235,7 +244,8 @@ covid_data %>%
   ggplot(aes(x = percent_at_risk, y = death_rate_in_last7)) + 
   geom_point() +  geom_smooth() +
   labs(
-    title = 'Distribution of last 7-day death rate by percentage of population at risk of serious illness', 
+    title = 'Distribution of last 7-day death rate by percentage
+    of population at risk of serious illness', 
     x = 'Percentage of population at risk of serious illness', 
     y = 'Death Rate per 100k in Last 7 Days'
   )
@@ -250,60 +260,105 @@ model2 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent, data = covi
 coeftest(model2, vcov = vcovHC)
 ```
 
-Here we can see the coefficient of the mask_mandates is still statistically significant with a p-value less than 0.05. Practically speaking, it says that having a face mask mandate for all, while controlling the white population percentage, is associated with a reduction of ~0.19 deaths per 100k people per 7 days, or ~1.9 deaths per 1 million people per 7 days. The white_percent is not statistically significant with a p-value greater than 0.05. Practically, it's effect is that a 1% increase in the percentage of white population would result in 0.3 additional deaths per 100K people per 7 days, or additional 3 deaths per 1 million people per 7 days.
+Here we can see the coefficient of the mask_mandates is still statistically significant with a p-value less than 0.05. Practically speaking, it says that having a face mask mandate for all, while controlling the white population percentage, is associated with a reduction of ~0.19 deaths per 100k people per 7 days, or ~1.9 deaths per 1 million people per 7 days. The *white_percent* is not statistically significant with a p-value greater than 0.05. Practically, it's effect is that a 1% increase in the percentage of white population would result in 0.3 additional deaths per 100K people per 7 days, or additional 3 deaths per 1 million people per 7 days.
 
-The coefficient for white_percent here might not be answering what we want to observe. The data is at state level, not patient, to be able to see the effect of a certain race (or any one different from it) on the death rate. We picked this variable because of background knowledge we gathered about people of color and people in minorities being hit worse by the pandemic than others. It could be reflecting another aspect, may be that more diverse states have more robust healthcare systems and service providers which have helped to lower death rate. So we will be cautious about how we use this coefficient to understand our question.
+The coefficient for *white_percent* here might not be answering what we want to observe. The data is at state level, not patient, to be able to see the effect of a certain race (or any one different from it) on the death rate. We picked this variable because of background knowledge we gathered about people of color and people in minorities being hit worse by the pandemic than others. It could be reflecting another aspect, may be that more diverse states have more robust healthcare systems and service providers which have helped to lower death rate. So we will be cautious about how we use this coefficient to understand our question.
 
 # Models 3, 4
 
 Model 3.
 
-For model 3 we will follow the approach of keeping one human controllable variable and multiple population parameter variables. This way, we will be able to control the population parameter variables and get a description of mask_mandate_all for the outcome variable and also get the additional information that the population parameter variables could provide in describing the death rate in last 7 days. 
+For model 3 we will follow the approach of keeping one human controllable variable and multiple population parameter variables. This way, we will be able to control the population parameter variables and get a description of *mask_mandate_all* for the outcome variable and also get the additional information that the population parameter variables could provide in describing the death rate in last 7 days. 
 
-We will add x65 (indicates the percent of people over 65 years of age in the population) and percent_at_risk (indicates the percent of people in the population who are at risk of serious illness if infected by the Coronavirus). Both are population parameters that are not controllable by humans. 
+We will add *percent_over_65* (indicates the percent of people over 65 years of age in the population) and *percent_at_risk* (indicates the percent of people in the population who are at risk of serious illness if infected by the Coronavirus). Both are population parameters that are not controllable by humans. 
 
 
-$$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + \beta_3\ x65 + \beta_4\ percent\_at\_risk+ u \tag{Model 3}$$
+$$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + \beta_3\ percent\_over\_65 + \beta_4\ percent\_at\_risk+ u \tag{Model 3}$$
 
 ```{r Model 3}
-model3 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent + x65 + percent_at_risk, data = covid_data)
+model3 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent + 
+               percent_over_65 + percent_at_risk, data = covid_data)
 coeftest(model3, vcov = vcovHC)
 ```
 
-The mask mandate for all still remains statistically significant with a slight increase in p-value but still under 0.05. It's practical value in this model is that having a face mask mandate for all, while controlling all the other population parameter variables, is associated with a reduction of ~0.18 deaths per 100k people per 7 days, or ~1.8 deaths per 1 million people per 7 days. The population parameter variables in the model are all statistically not significant with surprising (still not significant) descriptive effects of percentage of population with age over 65 and percentage of population at risk reducing deaths per 100K in 7 days. The lack of significance in x65 and percent_at_risk could be because of high correlation between them creating instability and not informing us well of either one's effect on the outcome variable. In the next model, we will drop one of these two variables while adding others that help us describe death rate in last 7 days better. 
+The mask mandate for all still remains statistically significant with a slight increase in p-value but still under 0.05. It's practical value in this model is that having a face mask mandate for all, while controlling all the other population parameter variables, is associated with a reduction of ~0.18 deaths per 100k people per 7 days, or ~1.8 deaths per 1 million people per 7 days. The population parameter variables in the model are all statistically not significant with surprising (still not significant) descriptive effects of percentage of population with age over 65 and percentage of population at risk reducing deaths per 100K in 7 days. The lack of significance in *percent_over_65* and *percent_at_risk* could be because of high correlation between them creating instability and not informing us well of either one's effect on the outcome variable. In the next model, we will drop one of these two variables while adding others that help us describe death rate in last 7 days better. 
 
 Model 4. 
 
-For model 4 we will add an additional human controllable variable since we already saw the low/none significance that population parameter variables held while describing the death rate in last 7 days. We will add workplaces_mobility_change.
+For model 4 we will add an additional human controllable variable since we already saw the low/none significance that population parameter variables held while describing the death rate in last 7 days. We will add *workplaces_mobility_change*.
 
 We choose work mobility here because we think that is one that can be acted upon that could have an impact. On reading about factors of social closeness that matter for COVID-19 transmission or the intensity of the infection caught by someone, a major one is the viral load. This is higher when people are spend long periods of time in closed areas with those carrying the coronavirus. In parks, we are not in closed areas, in retail, there isn't an extended period of time spent since people are coming in and going out more frequently than at work. Grocery and pharmacies are necessities so they cannot be changed much and transit and residential mobility changes are very particular to each city so coming up with a blanket policy or plan to tackle those might be difficult. 
 
-$$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + \beta_3\ x65 $$
+$$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + \beta_3\ percent\_over\_65 $$
 $$+ \beta_4 workplaces\_mobility\_change + v \tag{Model 4}$$
 
 ```{r Model 4}
-model4 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent  + x65 + workplaces_mobility_change, data = covid_data)
+model4 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent  + percent_over_65
+             + workplaces_mobility_change, data = covid_data)
 coeftest(model4, vcov = vcovHC)
 ```
 
-We loose the statistical significance for mask_mandate_all indicating that some of it's effect may be shared with the newly added variable workplaces_mobility_changes. We can also see that the significance of the x65 variable has increase, still not to a statistically significant level. The correlation between workplaces_mobility_change and white_percent also seems to have affected the significance that white_percent's coefficient held in the previous model. It has introduced another instability to the model coefficients. 
+We loose the statistical significance for *mask_mandate_all* indicating that some of it's effect may be shared with the newly added variable *workplaces_mobility_change*. We can also see that the significance of the *percent_over_65* variable has increase, still not to a statistically significant level. The correlation between *workplaces_mobility_change* and *white_percent* also seems to have affected the significance that white_percent's coefficient held in the previous model. It has introduced another instability to the model coefficients. 
 
-All the coefficients are statistically insignificant, so we're failing to reject the null hypothesis that all these coefficients are 0. That puts us in a difficult situation as it is on the one hand possible that COVID-19 is driven by randomness (such as occurrence of superspreading events). But it is also very possible that there is an impact on the coefficients and their significance due to correlations between the explanatory variables. Let's see if keeping only one of the population attributes: percentage of population over 65 years of age can give us a better description of death rate in 100K in the last 7 days. In terms of the practical significance if we can speak of such thing given the p-values, only x65 seems to have a more sizeable coefficient.
+All the coefficients are statistically insignificant, so we're failing to reject the null hypothesis that all these coefficients are 0. That puts us in a difficult situation as it is on the one hand possible that COVID-19 is driven by randomness (such as occurrence of superspreading events). But it is also very possible that there is an impact on the coefficients and their significance due to correlations between the explanatory variables. Let's see if keeping only one of the population attributes: percentage of population over 65 years of age can give us a better description of death rate in 100K in the last 7 days. In terms of the practical significance if we can speak of such thing given the p-values, only *percent_over_65* seems to have a more sizeable coefficient.
 
 # Limitations Our Model 
 
 1. IID
 The question here is whether the observations for each different state are IID. One way that assumption might be challenged is because of some type of clustering of conditions in neighboring states for example. While that is a danger and of course some similarities do exist, it seems valid to argue that the connections between states are not such that one state can truly or easily influence the course of the epidemic in another state, either directly through policy (since all state policy is the domain of the local state government) or through demographic factors. That said perhaps travel between well-connected neighboring states can be a source of contagion (e.g. NY/NJ), so we need to be wary, as this impacts the "independant" portion of IID.
 
+*DAVID TO ADD STATE CHART HERE*
+
 2. Linear Conditional Expectation
 This is an issue that is very specific to the variables that we're choosing. Ideally, we'd be looking at the residuals of our models. One potential factor to worry about is the exponential nature of epidemics. That might mean that since the timing of the epidemic might be different in different states, we might be looking at different points on an exponential curve.
 
-```{r Linear Conditional Expectation}
-covid_data <- covid_data %>%
-  mutate(model4_residuals = resid(model4))
-covid_data <- covid_data %>%
-  mutate(model4_predictions = predict(model4))
+Judging by the stargazer table, we conclude that model 4 is our most robust model.  Because our first model only has one TRUE/FALSE variable, the residuals versus prediction plot isn't useful.
 
+```{r Residuals Versus Predictions}
+covid_data <- covid_data %>%  mutate(model2_residuals = resid(model2))
+covid_data <- covid_data %>%  mutate(model2_predictions = predict(model2))
+covid_data <- covid_data %>%  mutate(model3_residuals = resid(model3))
+covid_data <- covid_data %>%  mutate(model3_predictions = predict(model3))
+covid_data <- covid_data %>%  mutate(model4_residuals = resid(model4))
+covid_data <- covid_data %>%  mutate(model4_predictions = predict(model4))
+
+plot_model_2 <- covid_data %>%
+  ggplot(aes(x = model2_predictions, y = model2_residuals)) + 
+  geom_point() + stat_smooth(se=TRUE) + 
+  labs(
+    title = 'Model 2 Residuals 
+    vs. Model 2 Predictions',
+    x = 'Model 2 Predictions',
+    y = 'Model 2 Residuals'
+  )
+
+plot_model_3 <- covid_data %>%
+  ggplot(aes(x = model3_predictions, y = model3_residuals)) + 
+  geom_point() + stat_smooth(se=TRUE) + 
+  labs(
+    title = 'Model 3 Residuals 
+    vs. Model 3 Predictions',
+    x = 'Model 3 Predictions',
+    y = 'Model 3 Residuals'
+  )
+
+plot_model_4 <- covid_data %>%
+  ggplot(aes(x = model4_predictions, y = model4_residuals)) + 
+  geom_point() + stat_smooth(se=TRUE) + 
+  labs(
+    title = 'Model 4 Residuals 
+    vs. Model 4 Predictions',
+    x = 'Model 4 Predictions',
+    y = 'Model 4 Residuals'
+  )
+
+
+plot_model_2 | plot_model_3 | plot_model_4
+```
+
+By the occular test, we see that model 4 is the most linear between the predictions and residuals.  We will need to look at the other variables in the models versus the residuals to find where the most noise in our chosen model lies.
+
+```{r Linear Conditional Expectation}
 plot_1 <- covid_data %>%
   ggplot(aes(x = workplaces_mobility_change, y = model4_residuals)) + 
   geom_point() + stat_smooth(se=TRUE) + 
@@ -314,7 +369,7 @@ plot_1 <- covid_data %>%
   )
 
 plot_2 <- covid_data %>%
-  ggplot(aes(x = x65, y = model4_residuals)) + 
+  ggplot(aes(x = percent_over_65, y = model4_residuals)) + 
   geom_point() + stat_smooth(se=TRUE) + 
   labs(
     title = 'Model Residuals vs. Percent over 65',
