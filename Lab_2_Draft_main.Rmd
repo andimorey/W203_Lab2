@@ -1,31 +1,11 @@
 ---
-title: "Can Mask Mandates Help Lower the COVID-19 Death Rate?"
+title: "Can Mask Mandates Help Reduce COVID-19 Deaths?"
 author: "Srishti Mehra, Andi Morey Peterson, and David Djambazov"
 date: "11/14/2020"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(dpi = 300, fig.width = 9, fig.height = 5)
-```
-
-# Introduction
-
-  A common recommendation from doctors, scientists, and politicians is to wear face masks or other facial coverings to combat the spread of COVID-19. The World Health Organization states: "Masks are a key measure to suppress transmission and save lives. Masks reduce potential exposure risk from an infected person whether they have symptoms or not. People wearing masks are protected from getting infected. Masks also prevent onward transmission when worn by a person who is infected." We now have been in this pandemic for nearly 9 months, so with the data currently available, we want to build a causal model with data available about the current pandemic. 
-
-Many states have issued mandates for their citizens to wear masks in public and additionally, many states have issued mandates for employees who interact with the public to wear masks.  Now that cases have surged in the United States (When this was written in November of 2020), we ask: *Do state-wide face mask mandates cause a reduction in the amount of deaths in that state due to COVID-19?* 
-
-Because these mandates and other variables occur in a different times during the nine-month period, and the states were affected by the virus in different times as well, we will operationalize the variable "deaths" as the *Death Rate per 100,000  in the past 7 days* (ending Oct. 30th). The *total deaths* variable is inappropriate, as the population per state varies widely, skewing the data in largely populated states.  The total death rate per 100,000 is also inappropriate, as many states had large first waves in the beginning of the year which will skew the current state of the pandemic.  Using the current data (the past 7 days) will give a good analysis if the mandates are working *currently*.
-
-Another important consideration for our choice of outcome variable is that states that got hit at an early stage (such as NY, NJ and WA) have learned from the experience and imposed a number of policy measures. It is an open question if they are successful, however it would be interesting to see in our EDA whether the states most impacted by the current record wave of infections were indeed spared by the first wave and thus less stringent in their measures.
-
-We will operationalize "mandates", as TRUE/FALSE indicators.
-
-As we move through the model, we will do some causal analysis on other variables that may interact with the main question.  These variables include: percent of people over 65, racial diversity, political leanings, mobility, etc.  We will analyze each of these variables to come up with a final model to determine if and how much face masks are currently reducing death rates of citizens due to COVID-19. 
-
-## Import the data
-
-```{r read data, message=FALSE, warning=FALSE}
 library(magrittr)
 library(tidyverse)
 library(ggplot2)
@@ -36,16 +16,47 @@ library(lmtest)
 library(sandwich)
 library(patchwork)
 library(corrplot)
+library(usmap)
+
+knitr::opts_chunk$set(dpi = 300, fig.width = 9, fig.height = 5)
 ```
 
-```{r import data, message=FALSE}
-covid_raw_data<-read.csv("covid-19.csv",skip=1)
+# Introduction
+
+  A common recommendation from doctors, scientists, and politicians is to wear face masks or other facial coverings to combat the spread of COVID-19. The World Health Organization states: "Masks are a key measure to suppress transmission and save lives. Masks reduce potential exposure risk from an infected person whether they have symptoms or not. People wearing masks are protected from getting infected. Masks also prevent onward transmission when worn by a person who is infected." We now have been in this pandemic for nearly 9 months, so with the data currently available, we want to build a causal model with data available about the current pandemic. 
+
+Many states have issued mandates for their citizens to wear masks in public and additionally, many states have issued mandates for employees who interact with the public to wear masks.  Now that cases have surged in the United States (When this was written in December of 2020), we ask: *Do state-wide face mask mandates cause a reduction in the amount of deaths in that state due to COVID-19?* 
+
+Because these mandates and other variables occur at different times during the nine-month period, and the states were affected by the virus in different times as well, we will operationalize "deaths" as the *Death Rate per 100,000  in the past 7 days* (ending Oct. 30th). The *total deaths* variable is inappropriate, as the population per state varies widely, skewing the data in largely populated states.  The total death rate per 100,000 is also inappropriate, as many states had large first waves in the beginning of the year and instituted measures only in response to an already high death toll. Also the large first wave numbers will skew the analysis of the current state of the pandemic.  Using the current data (past 7 days) should provide basis for analysis if mandates are working *currently*.
+
+Another important consideration for our choice of outcome variable is that states that got hit at an early stage (such as NY, NJ and WA) have learned from the experience and imposed a number of policy measures. It is an open question if those are successful and that's why it would be interesting to see in our EDA whether the states most impacted by the current record wave of infections were indeed spared by the first wave and perhaps less stringent in their measures.
+
+We will operationalize "mandates" as TRUE/FALSE indicators.
+
+As we move through the model, we will do some causal analysis on other variables that may interact with the main question.  These variables include: percent of people over 65, racial diversity, political leanings, mobility, etc.  We will analyze each of these variables to come up with a final model to determine if and how much face masks are currently reducing population death rates due to COVID-19. 
+
+## Importing the data
+
+One thing to note is that some values are marked as `NR` - "Not Reported". We will encode them to NA for consistency. Essentially, there is no meaningful difference between NA and NR other than the fact that NR value reflects that a given state specifically does not record a certain variable as opposed to some other possible reason. For our purposes we can treat them as the same.
+
+```{r import data, message=FALSE, warning=FALSE}
+covid_raw_data<-read.csv("covid-19.csv",skip=1, na.strings=c("NA", "NR"))
 covid_masks_policies_data<-read.csv("covid policies masks.csv")
 
 covid_data<-left_join(
   covid_raw_data,
   covid_masks_policies_data)
 ```
+
+## Rename variables and define our operationalized mandate variable
+
+For better coding practices we are going to rename all of the variables we intend to look at. We also add an indicator variable whether the governor of a state is a Republican. The logic behind that is that mask mandates have become a politicized issue, one that mainly divides along partisan lines with Republicans opposed and Democrats in favor of the measure.
+
+There are several different mask mandate variables. We are focusing on what we consider the most potentially impactful one - "statewide mask use by individuals for all in public spaces". The reason we want to avoid including other such variables is that there's probably a very high correlation with other mask mandates (e.g. mandates for state employees) and because those target a much smaller section of the population.
+
+To keep our analysis clean we're not considering other factors that may affect the rate of adoption of actual mask wearing, such as legal enforcement. The reason is that it would introduce a host of potential omitted variable relationships. Ultimately, issuing a mask mandate is also a question of leadership. By issuing it, state leaders are communicating that COVID-19 is a real problem and should be taken seriously. This action might plausibly increase mask wearing and that could be a causal pathway to reducing the impact of COVID-19, if indeed mask wearing reduces infection rates. Or it could impact citizens' behaviors in other ways by simply highlighting the seriousness of the crisis. Either way, our question is whether there is evidence that this act of government has lead to a reduction in population death rates at the beginning of the fall wave of contagion.
+
+That is why our operationalization is an indicator variable showing if at the time of measurement of the last 7 day death rate per 100K (October 30th) there was an enacted mask mandate for all in the given state or not.
 
 
 ```{r rename variables}
@@ -71,14 +82,62 @@ covid_data <- covid_data  %>%
       residential_mobility_change = 'Residential',
       white_percent = 'White...of.Total.Population',
       percent_over_65='X65.',
-      percent_at_risk='Percent.at.risk.for.serious.illness.due.to.COVID'
+      percent_at_risk='Percent.at.risk.for.serious.illness.due.to.COVID',
+      fips = "State.FIPS.Code"
       )
 
 covid_data$repgov <- grepl("(R)",covid_data$Governor)
 covid_data$mask_mandate_all <- ifelse(or(covid_data$mask_for_all_mandated_on == 0,                              covid_data$mask_for_all_end != 0), FALSE, TRUE)
+
 ```
 
 # Initial Exploratory Data Analysis (EDA)
+
+## Layout of the land
+
+Here is the mask mandate status of all 50 states. We're omitting an NA generated by the `usmap` for the District of Columbia.
+
+```{r}
+plot1 = plot_usmap(data = covid_data, values = "mask_mandate_all") + 
+        scale_fill_manual(values = c("TRUE" = "white", "FALSE" = "dark blue"),
+                          na.translate = F,
+                          name = "Mask Mandate") + 
+        theme(legend.position = "right") +
+        labs(title = "States without a mask mandate as of Oct 30th, 2020")
+
+plot1
+```
+
+Now let's look at the population death rate in the past 7 days before October 30th.
+
+```{r}
+plot2 = plot_usmap(data = covid_data, values = "death_rate_in_last7") + 
+        scale_fill_continuous(low = "white", high = "dark blue",
+                              name = "Death rate per 100K") + 
+        theme(legend.position = "right") +
+        labs(title = "Death rate per 100K over the last 7 days before Oct 30th, 2020")
+
+plot2
+```
+
+## Potential data issues
+
+Let's look to the missing values. Here they are by state.
+
+```{r}
+subset(data.frame("state" = covid_data$State,
+                 "NA_count" = apply(is.na(covid_data),1,sum)),NA_count > 0)
+```
+
+And here they are by variable.
+```{r}
+colnames(covid_data)[colSums(is.na(covid_data)) > 0]
+```
+We are not looking into any of these variables and they mostly seems related to racial reporting of cases and deaths as some states do not report those numbers. But it is not a big concern.
+
+Plot 2 above has already shown that our outcome variable has a reasonable range of values.
+
+## Variables
 
 Let us take a look at a correlation table of a number of interesting variables.
 ```{r Corr Table EDA}
@@ -95,19 +154,23 @@ covid_corr <- covid_corr  %>%
           death_rt = "death_rate",
           death_rt7 = "death_rate_in_last7",
           white = "white_percent",
-          pop_dens = "population_density",
-          work_mob = "workplaces_mobility_change",
-          retail_mob = "retail_mobility_change",
-          per_risk = "percent_at_risk"
+          pop_density = "population_density",
+          work_mobility = "workplaces_mobility_change",
+          retail_mobility = "retail_mobility_change",
+          percent_risk = "percent_at_risk"
   )
 
 cor_mat <- cor(covid_corr[,c("case_rt", "case_rt7", "death_rt", "death_rt7", "white", 
-                             "percent_over_65","per_risk", "pop_dens", "mask_mandate_all", 
-                             "work_mob", "retail_mob", "repgov")])
+                             "percent_over_65","percent_risk", "pop_density",
+                             "mask_mandate_all", "work_mobility",
+                             "retail_mobility", "repgov")])
 
-corrplot(cor_mat, method = "color", order = "AOE", diag=FALSE, addCoef.col = "white", 
-         addCoefasPercent = TRUE)
-mtext("Correlation Matrix Visualization of Mask Mandates", side=3, adj=0, cex=1.0)
+corrplot(cor_mat, method = "color", order = "AOE", type = "lower",
+         diag=FALSE, addCoef.col = "white", tl.srt = 30,
+         addCoefasPercent = TRUE, mar = c(0, 0, 1, 0),
+         title = "Correlation Matrix Visualization of COVID-19 data")
+
+#mtext("Correlation Matrix Visualization of Mask Mandates", side=3, adj=0, cex=1.0)
 ```
 
 An interesting pattern that emerges from the above correlation table is that the overall death rate and the death rate over the last 7 days have opposing relationships with a number of variables such as mobility, mask mandates and white population percentage. That seems to be indicative of something we've suspected in approaching the research question. Perhaps the states that suffered the worst of the first wave are not the states that are suffering now. And while in the first wave measures would have come too late to save the victims of the initial outburst of COVID-19, now the picture is changed.
@@ -150,27 +213,27 @@ Here we can see the coefficient of the mask_mandates is statistically significan
 ```{r Model 1 Residuals}
 hist(model1$residuals, breaks = 10, 
      main = "Residuals from Linear Model 1 Predicting Death Rate in last 7 days")
+
 plot(model1, which=2,
      sub.caption = "QQ Plot of Model 1 Residuals", 
      labels.id = state.name) # QQ Plot of Residual
 ```
 
-When we plot the residuals of our first model, we can see that it isn't quite normal, with one particular state (Ohio) having a residual above 1, which is quite high given that the median is below 0.5. Then again we don't see clear evidence of violations of assumptions 2 or 4.
+When we plot the residuals of our first model, we can see that it isn't quite normal, with one particular state (Ohio) having a residual above 1, which is quite high given that the median is below 0.5. Then again we don't see clear evidence of violations of assumptions 2 or 4 (see assumptions discussion section).
 
 # Model 2
 
-Since we had a human controlled variable in the first model to describe, we will add a variable that is a population parameter, not human controllable in model 2. We do this because we think all human controlled variables will influence one another and create instability in the model. Moreover, we want to be able to control for the mask mandate and describe our outcome variable, this will not be possible if another variable that is highly correlated with the mask mandate is also in the model. We will therefore add a variable that will add us to control for both the mask mandate and the population parameter variable. 
+Since we had a human controlled variable in the first model, we will add a variable that is a population parameter, not human controllable in model 2. We do this because we think all human controlled variables might influence one another and create instability in the model. Moreover, we want to be able to control for the mask mandate and describe our outcome variable, this will not be possible if another variable that is highly correlated with the mask mandate is also in the model. We will therefore add a variable that will help us to control for both the mask mandate and the population parameter variable. 
 
-Variables being considered: *percent_over_65* (indicates the percent of people over 65 years of age in the population), white (indicates the percent of people in the population who are of the white race), and *percent_at_risk* (indicates the percent of people in the population who are at risk of serious illness if infected by the Coronavirus).
+Variables being considered: *percent_over_65* (indicates the percent of people over 65 years of age in the population), *white* (indicates the percent of people in the population who identify themselves as white, non-hispanic), and *percent_at_risk* (indicates the percent of people in the population who are at risk of serious illness if infected by the Coronavirus).
 
 Our reasons for considering these three variables are as follows:
 
 *percent_over_65* - Being older has historically weakened people's immune systems and ability to fight an infection. These have resulted in higher death rate in age groups over 65 years all over the world. This could inform our death rate over the last 7 days. 
 
-*white_percent* - We have read from other studies that have controlled variables like income and insurance to show that some races have had higher death rates due to COVID-19 than others. 
+*white_percent* - We have read from other studies that have controlled variables like income and access to insurance to show that some races have had higher death rates due to COVID-19 than others. 
 
-*percent_at_risk* - Groups with people who have an existing illness like Diabetes or Heart Disease have seen higher death rates due to the lack of immunity and fighting resources available in the body to fight the coronavirus. COVID-19 also seems to worsen the existing co-morbities that people with such diseases have, making them susceptible to death by the virus. 
-
+*percent_at_risk* - People who have an existing conditions like diabetes or heart disease have seen higher death rates due to either weaker immunity or to the additional damage to blood vessels and organs caused by COVID-19.
 
 Distribution of *percent_over_65* across states:
 ```{r}
@@ -178,13 +241,13 @@ covid_data %>%
   ggplot(aes(x = State, y = percent_over_65)) + geom_point() + 
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   labs(
-    title = 'Population percentage with age over 65 across states', 
+    title = 'Population percentage of age over 65 across states', 
     x = 'State', 
-    y = 'Population percentage with age over 65'
+    y = 'Population percentage, age over 65'
   ) 
 ```
 
-Distribution of last 7-day death rate by population percentage with age over 65:
+Distribution of last 7-day death rate by population percentage of age over 65:
 ```{r}
 
 covid_data %>% 
@@ -309,8 +372,24 @@ All the coefficients are statistically insignificant, so we're failing to reject
 1. IID
 The question here is whether the observations for each different state are IID. One way that assumption might be challenged is because of some type of clustering of conditions in neighboring states for example. While that is a danger and of course some similarities do exist, it seems valid to argue that the connections between states are not such that one state can truly or easily influence the course of the epidemic in another state, either directly through policy (since all state policy is the domain of the local state government) or through demographic factors. That said perhaps travel between well-connected neighboring states can be a source of contagion (e.g. NY/NJ), so we need to be wary, as this impacts the "independent" portion of IID.
 
-*DAVID TO ADD STATE CHART HERE*
+```{r}
+plot3 = plot_usmap(data = covid_data, values = "death_rate") + 
+        scale_fill_continuous(low = "white", high = "dark blue", 
+                              name = "rate per 100K", label = scales::comma) + 
+        theme(legend.position = "right") +
+        labs(title = "Covid-19 death rate")
 
+plot4 = plot_usmap(data = covid_data, values = "death_rate_in_last7") + 
+        scale_fill_continuous(low = "white", high = "dark blue", 
+                              name = "rate per 100K", label = scales::comma) + 
+        theme(legend.position = "right") +
+        labs(title = "Covid-19 death rate in the last 7 days")
+
+plot3
+```
+```{r}
+plot4
+```
 2. Linear Conditional Expectation
 This is an issue that is very specific to the variables that we're choosing. Ideally, we'd be looking at the residuals of our models. One potential factor to worry about is the exponential nature of epidemics. That might mean that since the timing of the epidemic might be different in different states, we might be looking at different points on an exponential curve.
 
