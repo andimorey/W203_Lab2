@@ -169,7 +169,7 @@ Our reasons for considering these three variables are as follows:
 
 *white_percent* - We have read from other studies that have controlled variables like income and insurance to show that some races have had higher death rates due to COVID-19 than others. 
 
-*percent_at_risk* - Groups with people who have an existing illness like Diabetes or Heart Disease have seen higher death rates due to the lack of immunity and fighting resources available in the body to fight the coronavirus. COVID-19 also seems to worsen the existing co-morbities that people with such diseases have, making them susceptible to death by the virus. 
+*percent_at_risk* - Groups with people who have an existing illness like Diabetes or Heart Disease have seen higher death rates due to the lack of immunity and fighting resources available in the body to fight the Coronavirus. COVID-19 also seems to worsen the existing co-morbities that people with such diseases have, making them susceptible to death by the virus.
 
 
 Distribution of *percent_over_65* across states:
@@ -184,20 +184,6 @@ covid_data %>%
   ) 
 ```
 
-Distribution of last 7-day death rate by population percentage with age over 65:
-```{r}
-
-covid_data %>% 
-  ggplot(aes(x = (percent_over_65), y = death_rate_in_last7)) + 
-  geom_point() +  geom_smooth() +
-  labs(
-    title = 'Distribution of last 7-day death rate by population percentage with age over 65', 
-    x = 'Population percentage with age over 65', 
-    y = 'Death Rate per 100k in Last 7 Days'
-  )
-
-```
-
 Distribution of white population percentage across states:
 ```{r}
 covid_data %>% 
@@ -208,20 +194,6 @@ covid_data %>%
     x = 'State', 
     y = 'White population percentate'
   ) 
-```
-
-Distribution of last 7-day death rate by white population percentage:
-```{r}
-
-covid_data %>% 
-  ggplot(aes(x = (white_percent), y = death_rate_in_last7)) + 
-  geom_point() +  geom_smooth() +
-  labs(
-    title = 'Distribution of last 7-day death rate by white population percentage', 
-    x = 'White population percentage', 
-    y = 'Death Rate per 100k in Last 7 Days'
-  )
-
 ```
 
 Distribution for percentage of population at risk of serious illness across states:
@@ -237,20 +209,6 @@ covid_data %>%
   ) 
 ```
 
-Distribution of last 7-day death rate by percentage of population at risk of serious illness:
-```{r}
-
-covid_data %>% 
-  ggplot(aes(x = percent_at_risk, y = death_rate_in_last7)) + 
-  geom_point() +  geom_smooth() +
-  labs(
-    title = 'Distribution of last 7-day death rate by percentage
-    of population at risk of serious illness', 
-    x = 'Percentage of population at risk of serious illness', 
-    y = 'Death Rate per 100k in Last 7 Days'
-  )
-
-```
 
 We will use white population percentage as our additional variable in model 2 because we see variance in it over states so a change in it could indicate differences in our outcome variable.
 
