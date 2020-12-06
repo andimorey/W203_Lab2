@@ -137,7 +137,7 @@ There seems to be a separation that would make using this relationship for our f
 
 # Model 1
 
-Our first model will only look at the death rate in past 7 days per 100k people and a boolean indicator on wheather or not mandates for face masks are in place:
+Our first model will only look at the death rate in past 7 days per 100k people and a boolean indicator on whether or not mandates for face masks are in place:
 
 $$death\_rate_7 = \beta_0 + \beta_1 mandate + w \tag{Model 1}$$
 ```{r Model 1}
@@ -262,7 +262,7 @@ summary(model2)
 
 Here we can see the coefficient of the mask_mandates is still statistically significant with a p-value less than 0.05. Practically speaking, it says that having a face mask mandate for all, while controlling the white population percentage, is associated with a reduction of ~0.19 deaths per 100k people per 7 days, or ~1.9 deaths per 1 million people per 7 days. The *white_percent* is not statistically significant with a p-value greater than 0.05. Practically, it's effect is that a 1% increase in the percentage of white population would result in 0.3 additional deaths per 100K people per 7 days, or additional 3 deaths per 1 million people per 7 days.
 
-The coefficient for *white_percent* here might not be answering what we want to observe. The data is at state level, not patient, to be able to see the effect of a certain race (or any one different from it) on the death rate. We picked this variable because of background knowledge we gathered about people of color and people in minorities being hit worse by the pandemic than others. It could be reflecting another aspect, may be that more diverse states have more robust healthcare systems and service providers which have helped to lower death rate. So we will be cautious about how we use this coefficient to understand our question.
+The coefficient for *white_percent* here might not be answering what we want to observe. The data is at state level, not patient, to be able to see the effect of a certain race (or any one different from it) on the death rate. We picked this variable because of background knowledge we gathered about people of color and people in minorities being hit worse by the pandemic than others. It could be reflecting another aspect, may be that more diverse states have more robust health-care systems and service providers which have helped to lower death rate. So we will be cautious about how we use this coefficient to understand our question.
 
 # Models 3, 4
 
@@ -432,7 +432,7 @@ stargazer(model1,model2, model3, model4,
           column.labels = c("model1","model2","model3","model 4"))
 ```
 
-We see adding more variables decreases the residual standard errors, but not by a large amount. We also see that Adjusted R2 increases a bit from model1 to model2 but not a whole lot from model2 to model3. The residuals convey that there are explanations we have not covered in our models that can describe the death rate in 100K in the last 7 days better. We will evaluate some omitted variables that might inform and improve the model. 
+We see adding more variables decreases the residual standard errors, but not by a large amount. We also see that Adjusted R2 increases a bit from model1 to model2, decreases from model2 to model3, and then increases again in model4. So it indicates that the additional variables in model3 did not help much with the increase fit of the model to the data but those of model4 were helpful. The residuals convey that there are explanations we have not covered in our models that can describe the death rate in 100K in the last 7 days better. We will evaluate some omitted variables that might inform and improve the model. 
 
 # Discussion of Omitted Variables
 
