@@ -281,7 +281,7 @@ model2 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent, data = covi
 summary(model2)
 ```
 
-Here we can see the coefficient of the mask_mandates is still statistically significant with a p-value less than 0.05. Practically speaking, it says that having a face mask mandate for all, while controlling the white population percentage, is associated with a reduction of ~0.19 deaths per 100k people per 7 days, or ~1.9 deaths per 1 million people per 7 days. The *white_percent* is not statistically significant with a p-value greater than 0.05. Practically, it's effect is that a 1% increase in the percentage of white population would result in 0.3 additional deaths per 100K people per 7 days, or additional 3 deaths per 1 million people per 7 days.
+Here we can see the coefficient of the mask_mandates is still statistically significant with a p-value less than 0.05. Practically speaking, it says that having a face mask mandate for all, while controlling the white population percentage, is associated with a reduction of ~0.19 deaths per 100k people per 7 days, or ~1.9 deaths per 1 million people per 7 days. The *white_percent* is not statistically significant with a p-value greater than 0.05. Practically, its effect is that a 1% increase in the percentage of white population would result in 0.3 additional deaths per 100K people per 7 days, or additional 3 deaths per 1 million people per 7 days.
 
 The coefficient for *white_percent* here might not be answering what we want to observe. The data is at state level, not patient, to be able to see the effect of a certain race (or any one different from it) on the death rate. We picked this variable because of background knowledge we gathered about people of color and people in minorities being hit worse by the pandemic than others. It could be reflecting another aspect, may be that more diverse states have more robust health-care systems and service providers which have helped to lower death rate. So we will be cautious about how we use this coefficient to understand our question.
 
@@ -412,7 +412,7 @@ plot_2 <- covid_data %>%
   geom_point() + stat_smooth(se=TRUE) +
   labs(
     title = 'Model Residuals vs. Percent over 65',
-    x = 'Percent over 6',
+    x = 'Percent over 65',
     y = 'Model Residuals'
   )
 
