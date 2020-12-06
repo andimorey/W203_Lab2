@@ -142,7 +142,7 @@ Our first model will only look at the death rate in past 7 days per 100k people 
 $$death\_rate_7 = \beta_0 + \beta_1 mandate + w \tag{Model 1}$$
 ```{r Model 1}
 model1 <- lm(death_rate_in_last7 ~ mask_mandate_all, data = covid_data)
-coeftest(model1, vcov = vcovHC)
+summary(model1)
 ```
 
 Here we can see the coefficient of the mask_mandates is statistically significant with a p-value less than 0.01. Practically speaking, it says that having a face mask mandate for all is associated with a reduction of 0.21 deaths per 100k people per 7 days, or ~2 deaths per 1 million people per 7 days.
@@ -257,7 +257,7 @@ We will use white population percentage as our additional variable in model 2 be
 $$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + w \tag{Model 2}$$
 ```{r Model 2}
 model2 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent, data = covid_data)
-coeftest(model2, vcov = vcovHC)
+summary(model2)
 ```
 
 Here we can see the coefficient of the mask_mandates is still statistically significant with a p-value less than 0.05. Practically speaking, it says that having a face mask mandate for all, while controlling the white population percentage, is associated with a reduction of ~0.19 deaths per 100k people per 7 days, or ~1.9 deaths per 1 million people per 7 days. The *white_percent* is not statistically significant with a p-value greater than 0.05. Practically, it's effect is that a 1% increase in the percentage of white population would result in 0.3 additional deaths per 100K people per 7 days, or additional 3 deaths per 1 million people per 7 days.
@@ -278,7 +278,7 @@ $$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + \be
 ```{r Model 3}
 model3 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent + 
                percent_over_65 + percent_at_risk, data = covid_data)
-coeftest(model3, vcov = vcovHC)
+summary(model3)
 ```
 
 The mask mandate for all still remains statistically significant with a slight increase in p-value but still under 0.05. It's practical value in this model is that having a face mask mandate for all, while controlling all the other population parameter variables, is associated with a reduction of ~0.18 deaths per 100k people per 7 days, or ~1.8 deaths per 1 million people per 7 days. The population parameter variables in the model are all statistically not significant with surprising (still not significant) descriptive effects of percentage of population with age over 65 and percentage of population at risk reducing deaths per 100K in 7 days. The lack of significance in *percent_over_65* and *percent_at_risk* could be because of high correlation between them creating instability and not informing us well of either one's effect on the outcome variable. In the next model, we will drop one of these two variables while adding others that help us describe death rate in last 7 days better. 
@@ -295,7 +295,7 @@ $$+ \beta_4 workplaces\_mobility\_change + v \tag{Model 4}$$
 ```{r Model 4}
 model4 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent  + percent_over_65
              + workplaces_mobility_change, data = covid_data)
-coeftest(model4, vcov = vcovHC)
+summary(model4)
 ```
 
 We loose the statistical significance for *mask_mandate_all* indicating that some of it's effect may be shared with the newly added variable *workplaces_mobility_change*. We can also see that the significance of the *percent_over_65* variable has increase, still not to a statistically significant level. The correlation between *workplaces_mobility_change* and *white_percent* also seems to have affected the significance that white_percent's coefficient held in the previous model. It has introduced another instability to the model coefficients. 
@@ -305,7 +305,7 @@ All the coefficients are statistically insignificant, so we're failing to reject
 # Limitations Our Model 
 
 1. IID
-The question here is whether the observations for each different state are IID. One way that assumption might be challenged is because of some type of clustering of conditions in neighboring states for example. While that is a danger and of course some similarities do exist, it seems valid to argue that the connections between states are not such that one state can truly or easily influence the course of the epidemic in another state, either directly through policy (since all state policy is the domain of the local state government) or through demographic factors. That said perhaps travel between well-connected neighboring states can be a source of contagion (e.g. NY/NJ), so we need to be wary, as this impacts the "independant" portion of IID.
+The question here is whether the observations for each different state are IID. One way that assumption might be challenged is because of some type of clustering of conditions in neighboring states for example. While that is a danger and of course some similarities do exist, it seems valid to argue that the connections between states are not such that one state can truly or easily influence the course of the epidemic in another state, either directly through policy (since all state policy is the domain of the local state government) or through demographic factors. That said perhaps travel between well-connected neighboring states can be a source of contagion (e.g. NY/NJ), so we need to be wary, as this impacts the "independent" portion of IID.
 
 *DAVID TO ADD STATE CHART HERE*
 
