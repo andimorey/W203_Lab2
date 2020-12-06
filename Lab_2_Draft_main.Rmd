@@ -11,9 +11,9 @@ knitr::opts_chunk$set(dpi = 300, fig.width = 9, fig.height = 5)
 
 # Introduction
 
-  A common recommendation from doctors, scientists, and politicians is to wear face masks or other facial coverings to combat the spread of COVID-19. The World Health Organization states: "Masks are a key measure to suppress transmission and save lives. Masks reduce potential exposure risk from an infected person whether they have symptoms or not. People wearing masks are protected from getting infected. Masks also prevent onward transmission when worn by a person who is infected." We now have been in this pandamic for nearly 9 months, so with the data currently available, we want to build a causal model with data available about the current pandemic. 
+  A common recommendation from doctors, scientists, and politicians is to wear face masks or other facial coverings to combat the spread of COVID-19. The World Health Organization states: "Masks are a key measure to suppress transmission and save lives. Masks reduce potential exposure risk from an infected person whether they have symptoms or not. People wearing masks are protected from getting infected. Masks also prevent onward transmission when worn by a person who is infected." We now have been in this pandemic for nearly 9 months, so with the data currently available, we want to build a causal model with data available about the current pandemic. 
 
-Many states have issues mandates for their citizens to wear masks in public and additionally, many states have issues mandates for employees who interact with the public to wear masks.  Now that cases have surged in the United States (When this was written in November of 2020), we ask: *Do state-wide facemask mandates correlate with the reduction in the amount of deaths in that state due to COVID-19?* 
+Many states have issued mandates for their citizens to wear masks in public and additionally, many states have issued mandates for employees who interact with the public to wear masks.  Now that cases have surged in the United States (When this was written in November of 2020), we ask: *Do state-wide face mask mandates cause a reduction in the amount of deaths in that state due to COVID-19?* 
 
 Because these mandates and other variables occur in a different times during the nine-month period, and the states were affected by the virus in different times as well, we will operationalize the variable "deaths" as the *Death Rate per 100,000  in the past 7 days* (ending Oct. 30th). The *total deaths* variable is inappropriate, as the population per state varies widely, skewing the data in largely populated states.  The total death rate per 100,000 is also inappropriate, as many states had large first waves in the beginning of the year which will skew the current state of the pandemic.  Using the current data (the past 7 days) will give a good analysis if the mandates are working *currently*.
 
@@ -21,7 +21,7 @@ Another important consideration for our choice of outcome variable is that state
 
 We will operationalize "mandates", as TRUE/FALSE indicators.
 
-As we move through the model, we will do some causal analysis on other variables that may interact with the main question.  These variables include: population density, racial diversity, political leanings, mobility, etc.  We will analyze each of these variables to come up with a final model to determine if and how much face masks are currently reducing death rates of citizens due to COVID-19. 
+As we move through the model, we will do some causal analysis on other variables that may interact with the main question.  These variables include: percent of people over 65, racial diversity, political leanings, mobility, etc.  We will analyze each of these variables to come up with a final model to determine if and how much face masks are currently reducing death rates of citizens due to COVID-19. 
 
 ## Import the data
 
