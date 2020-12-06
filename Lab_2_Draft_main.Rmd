@@ -438,49 +438,61 @@ We see adding more variables decreases the residual standard errors, but not by 
 
 ### Mask Adoption
 
-1. The first variable we want to consider as one that could be introducing omitted variable bias is 'Mask Adoption'. Mask Adoption will be a variable that reflects what percentage of the population is wearing masks and to what extent or in what capacities (all day, when they go to populous places, when they are around anybody, etc.). Mask Adoption is correlated with Mask Mandates as those states with mandates will expect to see higher mask adoption than states without mask mandates. Mask Adoption can also be a determinant of the death rate in 100K in the last 7 days as masks reduce potential exposure risk from an infected person whether they have symptoms or not and lower exposure, lower case rate would have an impact on the death rate. 
+1. The first variable we want to consider as one that could be introducing omitted variable bias is *mask_adoption*. Mask Adoption will be a variable that reflects what percentage of the population is wearing masks and to what extent or in what capacities (all day, when they go to populous places, when they are around anybody, etc.). Mask Adoption is correlated with Mask Mandates as those states with mandates will expect to see higher mask adoption than states without mask mandates. Mask Adoption can also be a determinant of the death rate in 100K in the last 7 days as masks reduce potential exposure risk from an infected person whether they have symptoms or not and lower exposure, lower case rate would have an impact on the death rate. 
 
-Estimated model: $$death\_rate_7 = \tilde\beta_0 + \tilde\beta_1 mandate + w $$
-Actual model: $$death\_rate_7 = \beta_0 + \beta_1 mandate + \beta_2 adoption + \omega $$
+Estimated model: $$death\_rate_7 = \tilde\beta_0 + \tilde\beta_1 mask\_mandate\_all + w $$
+Actual model: $$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate\_all + \beta_2 mask\_adoption + \omega $$
+Secondary model: $$mask\_mandate\_all = \delta_0 + \delta_1mask\_adoption + a$$
 
-Direction of Bias: With $\beta_2$ expected to be negative (i.e. higher adoption would be associated with a decrease in death rate in 100K in the last 7 days) and mask adoption and mask mandate expected to be positively correlated, the actual coefficient of mandate will be lesser negative than expected and the direction of bias will be away from zero. 
+Direction of Bias: With $\beta_2$ expected to be negative (i.e. higher adoption would be associated with a decrease in death rate in 100K in the last 7 days) and *mask_adoption* and *mask_mandate_all* to be positively correlated, the actual coefficient of mandate will be lesser negative than expected and the direction of bias will be away from zero. 
+
+$$\tilde\beta_1 [-ve] = \beta_1 + \delta_1[+ve]*\beta_2[-ve]$$
 
 ### Work from Home Availablility
 
-2. The second variable we want to consider as one that could be introducing omitted variable bias is 'work from home availability'. This variable will reflect what percentage of the population has the option or has a mandate to work from home. 'Work from home availability' is correlated with *workplaces_mobility_change* and can also be a determinant of the death rate in 100K in the last 7 days as it would reduce the number of people who could possibly be spending extended hours in a close setting with the virus carriers, increasing viral load, and therefore severity.
+2. The second variable we want to consider as one that could be introducing omitted variable bias is *work_from_home_availability*. This variable will reflect what percentage of the population has the option or has a mandate to work from home. 'Work from home availability' is correlated with *workplaces_mobility_change* and can also be a determinant of the death rate in 100K in the last 7 days as it would reduce the number of people who could possibly be spending extended hours in a close setting with the virus carriers, increasing viral load, and therefore severity.
 
 Estimated model: $$death\_rate_7 = \tilde\beta_0 + \tilde\beta_1 workplace\_mobility\_changes + w $$
-Actual model: $$death\_rate_7 = \beta_0 + \beta_1 workplace\_mobility\_changes + \beta_2 work\ from\ home\ option + \omega $$
+Actual model: $$death\_rate_7 = \beta_0 + \beta_1 workplace\_mobility\_changes + \beta_2 work\_from\_home\_availability + \omega $$
+Secondary model: $$workplaces\_mobility\_change = \delta_0 + \delta_1work\_from\_home\_availability + b$$
 
-Direction of Bias: With $\beta_2$ negative (i.e. increasing work from home option will be associated with decrease in death rate) and work from home options to be negatively correlated with *workplaces_mobility_change* (i.e. increasing work from home options will decrease workplace mobility), the actual coefficient of mandate will be lesser positive than expected, possibly even negative since the coefficient of *workplaces_mobility_change* is very close to 0 in model4. This indicates that the the direction of bias will be away zero. 
+Direction of Bias: With $\beta_2$ negative (i.e. increasing work from home option will be associated with decrease in death rate) and *work_from_home_availability* to be negatively correlated with *workplaces_mobility_change* (i.e. increasing work from home options will decrease workplace mobility), the actual coefficient of mandate will be lesser positive than expected, possibly even negative since the coefficient of *workplaces_mobility_change* is very close to 0 in model4. This indicates that the the direction of bias will be away zero. 
+
+$$\tilde\beta_1 [+ve] = \beta_1 + \delta_1[-ve]*\beta_2[-ve]$$
 
 ### Diabetic Population
 
-3. The third variable we want to consider as one that could be introducing omitted variable bias is 'diabetic population'. This variable will reflect what percentage of the population has diabetes. 'Type 2 Diabetic population' is correlated with *white_percent* as type 2 diabetes is a condition more often observed common in non-white populations and it can also be a determinant of the death rate in 100K in the last 7 days as it has known to introduce co-morbidities in patients of COVID-19. 
+3. The third variable we want to consider as one that could be introducing omitted variable bias is *diabetic_percent*. This variable will reflect what percentage of the population has diabetes. 'Type 2 Diabetic population percentage' is correlated with *white_percent* as type 2 diabetes is a condition more often observed common in non-white populations and it can also be a determinant of the death rate in 100K in the last 7 days as it has known to introduce co-morbidities in patients of COVID-19. 
 
 Estimated model: $$death\_rate_7 = \tilde\beta_0 + \tilde\beta_1 white\_percent + w $$
-Actual model: $$death\_rate_7 = \beta_0 + \beta_1 white\_percent+ \beta_2 diabetes\ population + \omega $$
+Actual model: $$death\_rate_7 = \beta_0 + \beta_1 white\_percent+ \beta_2 diabetes\_percent + \omega $$
+Secondary model: $$white\_percent=\delta_0+\delta_1diabetes\_percent$$
+Direction of Bias: With $\beta_2$ positive (i.e. higher population of people with diabetes associated with higher death rate) and *diabetic_percent* negatively correlated with *white_percent*, the actual coefficient of mandate will be more positive than expected and the direction of bias will be toward zero.  
 
-Direction of Bias: With $\beta_2$ positive (i.e. higher population of people with diabetes associated with higher death rate) and diabetes population negatively correlated with *white_percent*, the actual coefficient of mandate will be more positive than expected and the direction of bias will be toward zero.  
+$$\tilde\beta_1 [+ve] = \beta_1 + \delta_1[-ve]*\beta_2[+ve]$$
 
 ### Donald Trump Supporters
 
-4. The fourth variable we want to consider as one that could be introducing omitted variable bias is 'percent of Donald Trump supporters'. This variable will population of people that support Donald Trump. This will be correlated with the *workplaces_mobility_change* as reluctance on Donald Trump's part to pay heed to COVID-19 is reflected in his supporters' actions as well. Also, states with population that support the republican party took COVID-19 more lightly from the beginning and their lower concern or guard could heighten death rates. 
+4. The fourth variable we want to consider as one that could be introducing omitted variable bias is *percent_supporting_Donald_Trump*. This variable will be the percentage of the population that support Donald Trump. This will be correlated with the *workplaces_mobility_change* as reluctance on Donald Trump's part to pay heed to COVID-19 is reflected in his supporters' actions as well. Also, states with population that support the republican party took COVID-19 more lightly from the beginning and their lower concern or guard could heighten death rates. 
 
 Estimated model: $$death\_rate_7 = \tilde\beta_0 + \tilde\beta_1workplaces\_mobility\_changes + w $$
-Actual model: $$death\_rate_7 = \beta_0 + workplaces\_mobility\_changes + \beta_2 population\_ supporting\_Donald\_Trump + \omega $$
+Actual model: $$death\_rate_7 = \beta_0 + workplaces\_mobility\_changes + \beta_2 percent\_ supporting\_Donald\_Trump + \omega $$
+Secondary model: $$workplaces\_mobility\_change = \delta_0 + percent\_ supporting\_Donald\_Trump$$
+Direction of Bias: With $\beta_2$ positive (i.e. higher percentage of Donald Trump supporters associated with higher death rates) and positive correlation of *percent_supporting_Donald_Trump* with *workplaces_mobility_change* (higher percentage of Donald Trump supporters associated with lesser negative changes in work mobility), the actual coefficient of mandate will be lesser positive than expected and the direction of bias will be away from zero.
 
-Direction of Bias: With $\beta_2$ positive (i.e. higher percentage of Donald Trump supporters associated with higher death rates) and positive correlation of population_supporting_Donald_Trump with *workplaces_mobility_change* (higher percentage of Donald Trump supporters associated with lesser negative changes in work mobility), the actual coefficient of mandate will be lesser positive than expected and the direction of bias will be away from zero.
+$$\tilde\beta_1 [+ve] = \beta_1 + \delta_1[+ve]*\beta_2[+ve]$$
 
 ### Population with Heart Disease
 
-5. The fifth variable we want to consider as one that could be introducing omitted variable bias is 'population with heart disease'. This variable will reflect what percentage of the population has heart disease. 'Population with heart disease' is correlated with *white_percent* as it is more common in non-white minority populations and it can also be a determinant of the death rate in 100K in the last 7 days as it has known to introduce co-morbidities in patients of COVID-19. 
+5. The fifth variable we want to consider as one that could be introducing omitted variable bias is *heart_disease_percent*. This variable will reflect what percentage of the population has heart disease. 'Percentage of population with heart disease' is correlated with *white_percent* as it is more common in non-white minority populations and it can also be a determinant of the death rate in 100K in the last 7 days as it has known to introduce co-morbidities in patients of COVID-19. 
 
 Estimated model: $$death\_rate_7 = \tilde\beta_0 + \tilde\beta_1 white\_percent + w $$
 Actual model: $$death\_rate_7 = \beta_0 + \beta_1 white\_percent+ \beta_2 population\_with\_heart\_disease + \omega $$
+Secondary model: $$white\_percent=\delta_0+\delta_1heart\_disease\_percent$$
 
-Direction of Bias: With $\beta_2$ positive (i.e. higher population of people with heart disease associated with higher death rate) and population with heart disease negatively correlated with *white_percent*, the actual coefficient of mandate will be more positive than expected and the direction of bias will be toward zero.  
+Direction of Bias: With $\beta_2$ positive (i.e. higher population of people with heart disease associated with higher death rate) and *heart_disease_percent* negatively correlated with *white_percent*, the actual coefficient of mandate will be more positive than expected and the direction of bias will be toward zero.  
 
+$$\tilde\beta_1 [+ve] = \beta_1 + \delta_1[-ve]*\beta_2[+ve]$$
 
 # Conclusion
 
