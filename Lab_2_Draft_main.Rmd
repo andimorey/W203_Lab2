@@ -282,6 +282,7 @@ summary(model3)
 ```
 
 The mask mandate for all still remains statistically significant with a slight increase in p-value but still under 0.05. It's practical value in this model is that having a face mask mandate for all, while controlling all the other population parameter variables, is associated with a reduction of ~0.18 deaths per 100k people per 7 days, or ~1.8 deaths per 1 million people per 7 days. The population parameter variables in the model are all statistically not significant with surprising (still not significant) descriptive effects of percentage of population with age over 65 and percentage of population at risk reducing deaths per 100K in 7 days. The lack of significance in *percent_over_65* and *percent_at_risk* could be because of high correlation between them creating instability and not informing us well of either one's effect on the outcome variable. In the next model, we will drop one of these two variables while adding others that help us describe death rate in last 7 days better. 
+Surprisingly, the coefficient for *percent_over_65* is negative indicating that more people over 65 in the population would mean lesser death rate in the last 7 dats due to Covid-19. While this could be true, we must again view this with caution because it could not be answering what we are trying to understand. The reason for this discrepancy would be the same as the one we observed in the coefficient for *white_percent* variable, the data is not granular enough to see at patient level and the state level data might be reflecting an effect that is indirectly causing higher population of people over 65 to reduce death rate in the last 7 days. 
 
 Model 4. 
 
@@ -299,6 +300,7 @@ summary(model4)
 ```
 
 We loose the statistical significance for *mask_mandate_all* indicating that some of it's effect may be shared with the newly added variable *workplaces_mobility_change*. We can also see that the significance of the *percent_over_65* variable has increase, still not to a statistically significant level. The correlation between *workplaces_mobility_change* and *white_percent* also seems to have affected the significance that white_percent's coefficient held in the previous model. It has introduced another instability to the model coefficients. 
+Practically, we see a small increase in death rate for every unit of increase in *workplaces_mobility_change* which aligns with our background information - the more people will spend time with others in closed spaces, the more their chances of contracting the virus and that at a higher viral load leading to higher severity of the disease and higher chances of death due to it. 
 
 All the coefficients are statistically insignificant, so we're failing to reject the null hypothesis that all these coefficients are 0. That puts us in a difficult situation as it is on the one hand possible that COVID-19 is driven by randomness (such as occurrence of superspreading events). But it is also very possible that there is an impact on the coefficients and their significance due to correlations between the explanatory variables. Let's see if keeping only one of the population attributes: percentage of population over 65 years of age can give us a better description of death rate in 100K in the last 7 days. In terms of the practical significance if we can speak of such thing given the p-values, only *percent_over_65* seems to have a more sizeable coefficient.
 
@@ -435,6 +437,7 @@ We see adding more variables decreases the residual standard errors, but not by 
 # Discussion of Omitted Variables
 
 ### Mask Adoption
+
 1. The first variable we want to consider as one that could be introducing omitted variable bias is 'Mask Adoption'. Mask Adoption will be a variable that reflects what percentage of the population is wearing masks and to what extent or in what capacities (all day, when they go to populous places, when they are around anybody, etc.). Mask Adoption is correlated with Mask Mandates as those states with mandates will expect to see higher mask adoption than states without mask mandates. Mask Adoption can also be a determinant of the death rate in 100K in the last 7 days as masks reduce potential exposure risk from an infected person whether they have symptoms or not and lower exposure, lower case rate would have an impact on the death rate. 
 
 Estimated model: $$death\_rate_7 = \tilde\beta_0 + \tilde\beta_1 mandate + w $$
@@ -443,36 +446,40 @@ Actual model: $$death\_rate_7 = \beta_0 + \beta_1 mandate + \beta_2 adoption + \
 Direction of Bias: With $\beta_2$ expected to be negative (i.e. higher adoption would be associated with a decrease in death rate in 100K in the last 7 days) and mask adoption and mask mandate expected to be positively correlated, the actual coefficient of mandate will be lesser negative than expected and the direction of bias will be away from zero. 
 
 ### Work from Home Availablility
-2. The second variable we want to consider as one that could be introducing omitted variable bias is 'work from home availability'. This variable will reflect what percentage of the population has the option or has a mandate to work from home. 'Work from home availability' is correlated with 'workplace mobility changes' and can also be a determinant of the death rate in 100K in the last 7 days as it would reduce the number of people who could possibly be spending extended hours in a close setting with the virus carriers and increasing viral load and therefore severity.
 
-Estimated model: $$death\_rate_7 = \tilde\beta_0 + \tilde\beta_1 workplace\ mobility\ changes + w $$
-Actual model: $$death\_rate_7 = \beta_0 + \beta_1 workplace\ mobility\ changes + \beta_2 work\ from\ home\ option + \omega $$
+2. The second variable we want to consider as one that could be introducing omitted variable bias is 'work from home availability'. This variable will reflect what percentage of the population has the option or has a mandate to work from home. 'Work from home availability' is correlated with *workplaces_mobility_change* and can also be a determinant of the death rate in 100K in the last 7 days as it would reduce the number of people who could possibly be spending extended hours in a close setting with the virus carriers, increasing viral load, and therefore severity.
 
-Direction of Bias: With $\beta_2$ negative (i.e. increasing work from home option will be associated with decrease in death rate) and work from home options to be negatively correlated with workplace mobility changes (i.e. increasing work from home options will decrease workplace mobility), the actual coefficient of mandate will be more negative than expected and the direction of bias will be toward zero. 
+Estimated model: $$death\_rate_7 = \tilde\beta_0 + \tilde\beta_1 workplace\_mobility\_changes + w $$
+Actual model: $$death\_rate_7 = \beta_0 + \beta_1 workplace\_mobility\_changes + \beta_2 work\ from\ home\ option + \omega $$
+
+Direction of Bias: With $\beta_2$ negative (i.e. increasing work from home option will be associated with decrease in death rate) and work from home options to be negatively correlated with *workplaces_mobility_change* (i.e. increasing work from home options will decrease workplace mobility), the actual coefficient of mandate will be lesser positive than expected, possibly even negative since the coefficient of *workplaces_mobility_change* is very close to 0 in model4. This indicates that the the direction of bias will be away zero. 
 
 ### Diabetic Population
-3. The third variable we want to consider as one that could be introducing omitted variable bias is 'diabetic population'. This variable will reflect what percentage of the population has diabetes. 'Type 2 Diabetic population' is correlated with 'white population' as type 2 diabetes is a condition more often observed common in non-white populations and it can also be a determinant of the death rate in 100K in the last 7 days as it has known to introduce co-morbidities in patients of COVID-19. 
 
-Estimated model: $$death\_rate_7 = \beta_0 + \beta_1 white\ population + w $$
-Actual model: $$death\_rate_7 = \beta_0 + \beta_1 white\ population+ \beta_2 diabetes\ population + \omega $$
+3. The third variable we want to consider as one that could be introducing omitted variable bias is 'diabetic population'. This variable will reflect what percentage of the population has diabetes. 'Type 2 Diabetic population' is correlated with *white_percent* as type 2 diabetes is a condition more often observed common in non-white populations and it can also be a determinant of the death rate in 100K in the last 7 days as it has known to introduce co-morbidities in patients of COVID-19. 
 
-Direction of Bias: With $\beta_2$ positive (i.e. higher population of people with diabetes associated with higher death rate) and diabetes population negatively correlated with white population, the actual coefficient of mandate will be more positive than expected and the direction of bias will be toward zero.  
+Estimated model: $$death\_rate_7 = \tilde\beta_0 + \tilde\beta_1 white\_percent + w $$
+Actual model: $$death\_rate_7 = \beta_0 + \beta_1 white\_percent+ \beta_2 diabetes\ population + \omega $$
+
+Direction of Bias: With $\beta_2$ positive (i.e. higher population of people with diabetes associated with higher death rate) and diabetes population negatively correlated with *white_percent*, the actual coefficient of mandate will be more positive than expected and the direction of bias will be toward zero.  
 
 ### Donald Trump Supporters
-4. The fourth variable we want to consider as one that could be introducing omitted variable bias is 'percent of Donald Trump supporters'. This variable will population of people that support Donald Trump. This will be correlated with the work mobility as reluctance on Donald Trump's part to pay heed to COVID-19 is reflected in his supporters' actions as well. Also, states with population that support the republican party took COVID-19 more lightly from the beginning and their lower concern or guard could heighten death rates. 
 
-Estimated model: $$death\_rate_7 = \beta_0 + mask\ mandate + w $$
-Actual model: $$death\_rate_7 = \beta_0 + mask\ mandate + \beta_2 population\ supporting\ Donald\ Trump + \omega $$
+4. The fourth variable we want to consider as one that could be introducing omitted variable bias is 'percent of Donald Trump supporters'. This variable will population of people that support Donald Trump. This will be correlated with the *workplaces_mobility_change* as reluctance on Donald Trump's part to pay heed to COVID-19 is reflected in his supporters' actions as well. Also, states with population that support the republican party took COVID-19 more lightly from the beginning and their lower concern or guard could heighten death rates. 
 
-Direction of Bias: With $\beta_2$ positive (i.e. higher percentage of Donald Trump supporters associated with higher death rates) and positive correlation with work mobility (higher percentage of Donald Trump supporters associated with lesser negative changes in work mobility), the actual coefficient of mandate will be lesser positive than expected and the direction of bias will be away from zero.
+Estimated model: $$death\_rate_7 = \tilde\beta_0 + \tilde\beta_1workplaces\_mobility\_changes + w $$
+Actual model: $$death\_rate_7 = \beta_0 + workplaces\_mobility\_changes + \beta_2 population\_ supporting\_Donald\_Trump + \omega $$
+
+Direction of Bias: With $\beta_2$ positive (i.e. higher percentage of Donald Trump supporters associated with higher death rates) and positive correlation of population_supporting_Donald_Trump with *workplaces_mobility_change* (higher percentage of Donald Trump supporters associated with lesser negative changes in work mobility), the actual coefficient of mandate will be lesser positive than expected and the direction of bias will be away from zero.
 
 ### Population with Heart Disease
-5. The fifth variable we want to consider as one that could be introducing omitted variable bias is 'population with heart disease'. This variable will reflect what percentage of the population has heart disease. 'Population with heart disease' is correlated with 'white population' it is more common in non-white minority populations and it can also be a determinant of the death rate in 100K in the last 7 days as it has known to introduce co-morbidities in patients of COVID-19. 
 
-Estimated model: $$death\_rate_7 = \beta_0 + \beta_1 white\ population + w $$
-Actual model: $$death\_rate_7 = \beta_0 + \beta_1 white\ population+ \beta_2 population\ with\ heart\ disease + \omega $$
+5. The fifth variable we want to consider as one that could be introducing omitted variable bias is 'population with heart disease'. This variable will reflect what percentage of the population has heart disease. 'Population with heart disease' is correlated with *white_percent* as it is more common in non-white minority populations and it can also be a determinant of the death rate in 100K in the last 7 days as it has known to introduce co-morbidities in patients of COVID-19. 
 
-Direction of Bias: With $\beta_2$ positive (i.e. higher population of people with heart disease associated with higher death rate) and population with heart disease negatively correlated with white population, the actual coefficient of mandate will be more positive than expected and the direction of bias will be toward zero.  
+Estimated model: $$death\_rate_7 = \tilde\beta_0 + \tilde\beta_1 white\_percent + w $$
+Actual model: $$death\_rate_7 = \beta_0 + \beta_1 white\_percent+ \beta_2 population\_with\_heart\_disease + \omega $$
+
+Direction of Bias: With $\beta_2$ positive (i.e. higher population of people with heart disease associated with higher death rate) and population with heart disease negatively correlated with *white_percent*, the actual coefficient of mandate will be more positive than expected and the direction of bias will be toward zero.  
 
 
 # Conclusion
