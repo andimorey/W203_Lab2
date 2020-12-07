@@ -27,7 +27,9 @@ knitr::opts_chunk$set(dpi = 300, fig.width = 9, fig.height = 5)
 
 Many states have issued mandates for their citizens to wear masks in public and additionally, many states have issued mandates for employees who interact with the public to wear masks.  Now that cases have surged in the United States (When this was written in December of 2020), we ask: *Do state-wide face mask mandates cause a reduction in the amount of deaths in that state due to COVID-19?*
 
-Because these mandates and other variables occur at different times during the nine-month period, and the states were affected by the virus in different times as well, we will operationalize "deaths" as the *Death Rate per 100,000  in the past 7 days* (ending Oct. 30th). The *total deaths* variable is inappropriate, as the population per state varies widely, skewing the data in largely populated states.  The total death rate per 100,000 is also inappropriate, as many states had large first waves in the beginning of the year and instituted measures only in response to an already high death toll. Also the large first wave numbers will skew the analysis of the current state of the pandemic.  Using the current data (past 7 days) should provide basis for analysis if mandates are working *currently*.
+The dataset we're using is compiled by Majid Maki-Nayery of University of California at Berkeley's School of Information with state-level variables from the COVID-19 US state policy database (Raifman J, Nocka K, Jones D, Bor J, Lipson S, Jay J, and Chan P). 
+
+Because these mandates and other variables occur at different times during the nine-month period, and the states were affected by the virus in different times as well, we will operationalize "deaths" as the *Death Rate per 100,000  in the past 7 days* (ending Oct. 30th). The *total deaths* variable is inappropriate, as the population per state varies widely, skewing the data in largely populated states.  The total death rate per 100,000 is also inappropriate, as many states had large first waves in the beginning of the year and instituted measures only in response to an already high death toll. Also the large first wave numbers will skew the analysis of the current state of the pandemic. Using the current data (past 7 days) should provide basis for analysis if mandates are working *currently*.
 
 Another important consideration for our choice of outcome variable is that states that got hit at an early stage (such as NY, NJ and WA) have learned from the experience and imposed a number of policy measures. It is an open question if those are successful and that's why it would be interesting to see in our EDA whether the states most impacted by the current record wave of infections were indeed spared by the first wave and perhaps less stringent in their measures.
 
@@ -106,6 +108,14 @@ plot1 = plot_usmap(data = covid_data, values = "mask_mandate_all") +
         labs(title = "States without a mask mandate as of Oct 30th, 2020")
 
 plot1
+```
+
+Here is the numerical breakdown.
+
+```{r}
+covid_data %>%
+  group_by(mask_mandate_all) %>%
+  summarise(states = n(), population = sum(Population.2018))
 ```
 
 Now let's look at the population death rate in the past 7 days before October 30th.
