@@ -247,6 +247,16 @@ covid_data %>%
   )
 ```
 
+```{r}
+plot1_var2 = plot_usmap(data = covid_data, values = "percent_over_65") +
+        scale_fill_continuous(low = "white", high = "blue",
+                              name = "Proportion", label = scales::comma) +
+        theme(legend.position = "right") +
+        labs(title = "Proportion of people over 65")
+
+plot1_var2
+```
+
 Distribution of white population percentage across states:
 ```{r}
 covid_data %>%
@@ -257,6 +267,16 @@ covid_data %>%
     x = 'State',
     y = 'White population percentate'
   )
+```
+
+```{r}
+plot2_var2 = plot_usmap(data = covid_data, values = "white_percent") +
+        scale_fill_continuous(low = "white", high = "blue",
+                              name = "Proportion", label = scales::comma) +
+        theme(legend.position = "right") +
+        labs(title = "Population proportion of non-hispanic whites")
+
+plot2_var2
 ```
 
 Distribution for percentage of population at risk of serious illness across states:
@@ -272,6 +292,15 @@ covid_data %>%
   )
 ```
 
+```{r}
+plot3_var2 = plot_usmap(data = covid_data, values = "percent_at_risk") +
+        scale_fill_continuous(low = "white", high = "blue",
+                              name = "Proportion", label = scales::comma) +
+        theme(legend.position = "right") +
+        labs(title = "Population proportion at risk of serious illness")
+
+plot3_var2
+```
 
 We will use white population percentage as our additional variable in model 2 because we see variance in it over states so a change in it could indicate differences in our outcome variable.
 
@@ -303,6 +332,7 @@ summary(model3)
 ```
 
 The mask mandate for all still remains statistically significant with a slight increase in p-value but still under 0.05. It's practical value in this model is that having a face mask mandate for all, while controlling all the other population parameter variables, is associated with a reduction of ~0.18 deaths per 100k people per 7 days, or ~1.8 deaths per 1 million people per 7 days. The population parameter variables in the model are all statistically not significant with surprising (still not significant) descriptive effects of percentage of population with age over 65 and percentage of population at risk reducing deaths per 100K in 7 days. The lack of significance in *percent_over_65* and *percent_at_risk* could be because of high correlation between them creating instability and not informing us well of either one's effect on the outcome variable. In the next model, we will drop one of these two variables while adding others that help us describe death rate in last 7 days better.
+
 Surprisingly, the coefficient for *percent_over_65* is negative indicating that more people over 65 in the population would mean lesser death rate in the last 7 dats due to Covid-19. While this could be true, we must again view this with caution because it could not be answering what we are trying to understand. The reason for this discrepancy would be the same as the one we observed in the coefficient for *white_percent* variable, the data is not granular enough to see at patient level and the state level data might be reflecting an effect that is indirectly causing higher population of people over 65 to reduce death rate in the last 7 days.
 
 Model 4.
@@ -320,7 +350,7 @@ model4 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent  + percent_o
 summary(model4)
 ```
 
-We loose the statistical significance for *mask_mandate_all* indicating that some of it's effect may be shared with the newly added variable *workplaces_mobility_change*. We can also see that the significance of the *percent_over_65* variable has increase, still not to a statistically significant level. The correlation between *workplaces_mobility_change* and *white_percent* also seems to have affected the significance that white_percent's coefficient held in the previous model. It has introduced another instability to the model coefficients.
+We lose statistical significance for *mask_mandate_all* indicating that some of it's effect may be shared with the newly added variable *workplaces_mobility_change*. We can also see that the significance of the *percent_over_65* variable has increase, still not to a statistically significant level. The correlation between *workplaces_mobility_change* and *white_percent* also seems to have affected the significance that white_percent's coefficient held in the previous model. It has introduced another instability to the model coefficients.
 Practically, we see a small increase in death rate for every unit of increase in *workplaces_mobility_change* which aligns with our background information - the more people will spend time with others in closed spaces, the more their chances of contracting the virus and that at a higher viral load leading to higher severity of the disease and higher chances of death due to it.
 
 All the coefficients are statistically insignificant, so we're failing to reject the null hypothesis that all these coefficients are 0. That puts us in a difficult situation as it is on the one hand possible that COVID-19 is driven by randomness (such as occurrence of superspreading events). But it is also very possible that there is an impact on the coefficients and their significance due to correlations between the explanatory variables. Let's see if keeping only one of the population attributes: percentage of population over 65 years of age can give us a better description of death rate in 100K in the last 7 days. In terms of the practical significance if we can speak of such thing given the p-values, only *percent_over_65* seems to have a more sizeable coefficient.
@@ -533,6 +563,22 @@ $$\tilde\beta_1 [+ve] = \beta_1 + \delta_1[-ve]*\beta_2[+ve]$$
 
 # Conclusion
 
-The question of the impact of state-level policy choices on the mortality rates from COVID-19 is of utmost societal and even political importance in the United States. Our analysis approaches the question by building models that incorporate both policy variables and more immutable population and demographic variables in an attempt to explain what might affect the most recent 7-day death rate by state.
+The question of the impact of state-level policy choices on the mortality rates from COVID-19 is of utmost societal and even political importance in the United States. Our analysis approaches the question by focusing on one of the least expensive policy approaches - issuing mask mandates at the state level and its effect on the 7-day death rate per 100K people in the US at the beginning of the fall wave (October 30th, 2020).
 
-Overall, our results are that we don't find evidence supporting the idea of a simple policy magic bullet or a population characteristic that can protect against the deadly virus. That said, we have identified a number of omitted variables, not available in the studied dataset that could shine a brighter light onto what could work in the short term before a long awaited vaccine solves the problem in a sustainable and permanent way.
+We believe that the implications of our chosen analysis are important as by the start of the fall of 2020, it was clear that some factors, among them perhaps policy measures, do work as evidenced by the decline of infection in the worst affected states from the spring wave. It was also clear that as of October 30th a new wave of infections was starting. Thus evidence in favor of the effectiveness of mask mandates would be useful for policy-makers as they try to stem the pressure from the fall wave of COVID-19 cases.  
+
+We built a few models using OLS regression. The strategy was to operationalize the presence of mask mandates at the state level at the time of the data report as an indicator variable, then look at its relationship to the 7-day death outcome rate variable and finally add more immutable population and demographic variables that permit controlling for structural differences between the states. In one model we also added some more policy- and behavior-impacted variables, such as workplace mobility, to see how robust the mask mandate coefficient and significance are in their presence.
+
+The limitations we faced in doing the analysis were plentiful. The exponential nature of the contagion process makes it extremely dynamic. Small random differences at an early stage can lead to vastly different outcomes down the line even if all else is equal. Looking at single period 7-day numbers across many states is particularly vulnerable to that effect. Early in the first wave one way to mitigate would have been to compare periods equally offset from some threshold (e.g. first 25 deaths), but at this point it's much harder to resolve a clear "start" to the wave.
+
+This poses a challenge also in terms of measuring effect size. Death rates per 100K people in late October are completely different from what they are now. Any coefficient we get from our model would only be relevant for that point in time.
+
+Another limitation is that we're working on the state level. That means very few observations coupled with serious challenges to the IID assumption. States themselves can be very large with sometimes massive divergence in regional geography, culture and demographics. As COVID-19 is not yet spread among a huge percentage of the population, random or local events could strongly influence a state's overall numbers, and in the aggregation causal information could be lost.
+
+Finally, we're trying to build a causal model for a highly unstable dynamic pandemic with many potential omitted variables, with few observations and without any possibility for setting up a true experiment or for finding a natural one That is a huge ask. That is why we have focused on a relatively simple setup with somewhat reliably measured variables such as the presence of a mask mandate in a state and the 7-day death rate from COVID-19. Of course, measuring the latter can have its issues. Precisely determining the cause of the death is a complex undertaking in the best of times. Under conditions of global pandemic caused by a novel virus, it is flat out daunting. At the same time, unlike infections, large scale deaths are impossible to hide or ignore. This gives us confidence that the uncertainty and reporting differences between states on that measure are much lower than for other COVID-19-related variables.
+
+If we were to take another stab at building this specific causal model, more granular data (perhaps at the county level) would help. Another idea would be to look not at a single snapshot of death rates, but at some measure of the steepness of the death curve over time. If mask mandates are truly helping to somewhat flatten that curve, their impact might be very significant in the long run.  
+
+With these limitations in mind, we find that as of October 30th, at the beginning of the fall COVID-19 wave, there is evidence that having a mask mandate in place would reduce the death toll on the order of 1-2 per week per million people. The result is statistically significant and the effect size is robust across the four models we looked at.
+
+In a state like California with a population of about 40 million, that would be 40-80 fewer deaths per week. Is that practically significant? To the families and communities of those people, it's hugely significant. For changing the overall direction and impact of the pandemic, it's a lot more difficult to say. Yet given the low practical, if not political, cost to the measure, and the fact that at a minimum wearing a mask is completely innocuous to the wearer, the answer to the question whether state officials should impose mask mandates is yes, absolutely.
