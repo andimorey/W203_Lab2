@@ -48,10 +48,13 @@ One thing to note is that some values are marked as `NR` - "Not Reported". We wi
 ```{r import data, message=FALSE, warning=FALSE}
 covid_raw_data<-read.csv("covid-19.csv",skip=1, na.strings=c("NA", "NR"))
 covid_masks_policies_data<-read.csv("covid policies masks.csv")
+oct_temp <- read.csv("avgtemp_oct2020.csv")
 
-covid_data<-left_join(
-  covid_raw_data,
-  covid_masks_policies_data)
+covid_data1<-left_join(covid_raw_data,
+                       covid_masks_policies_data)
+
+covid_data <- left_join(covid_data1,
+                        oct_temp)
 ```
 
 ## Rename variables and define our operationalized mandate variable
@@ -139,10 +142,10 @@ Let's look to the missing values. Here they are by state.
 
 ```{r Missing State Data}
 subset(data.frame("state" = covid_data$State,
-                 "NA_count" = apply(is.na(covid_data),1,sum)),NA_count > 0)
+                 "NA_count" = apply(is.na(covid_data),1,sum)), NA_count > 0)
 ```
 
-And here they are by variable.
+And here are the variables with NAs.
 ```{r Missing Variable Data}
 colnames(covid_data)[colSums(is.na(covid_data)) > 0]
 ```
@@ -170,7 +173,7 @@ covid_corr <- covid_corr  %>%
           pop_density = "population_density",
           work_mobility = "workpl_mob_change",
           retail_mobility = "retail_mobility_change",
-          percent_risk = "percent_at_risk"
+          percent_risk = "percent_at_risk",
   )
 
 cor_mat <- cor(covid_corr[,c("case_rt", "case_rt7", "death_rt", "death_rt7", "white",
@@ -182,8 +185,6 @@ corrplot(cor_mat, method = "color", order = "AOE", type = "lower",
          diag=FALSE, addCoef.col = "white", tl.srt = 30,
          addCoefasPercent = TRUE, mar = c(0, 0, 1, 0),
          title = "Correlation Matrix Visualization of COVID-19 data")
-
-#mtext("Correlation Matrix Visualization of Mask Mandates", side=3, adj=0, cex=1.0)
 ```
 
 An interesting pattern that emerges from the above correlation table is that the overall death rate and the death rate over the last 7 days have opposing relationships with a number of variables such as mobility, mask mandates and white population percentage. That seems to be indicative of something we've suspected in approaching the research question. Perhaps the states that suffered the worst of the first wave are not the states that are suffering now. And while in the first wave measures would have come too late to save the victims of the initial outburst of COVID-19, now the picture is changed.
@@ -249,15 +250,7 @@ Our reasons for considering these three variables are as follows:
 *percent_at_risk* - People who have an existing conditions like diabetes or heart disease have seen higher death rates due to either weaker immunity or to the additional damage to blood vessels and organs caused by COVID-19.
 
 Distribution of *percent_over_65* across states:
-```{r Sixty Five Distribution, fig.height=4}
-covid_data %>%
-  ggplot(aes(x = State, y = percent_over_65)) + geom_point() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(
-    title = 'Population percentage of age over 65 across states',
-    x = 'State', y = 'Population percentage, age over 65'
-  )
-```
+
 ```{r Sixty Five Map, fig.height=3.5, fig.align='center'}
 plot1_var2 = plot_usmap(data = covid_data, values = "percent_over_65") +
         scale_fill_continuous(low = "white", high = "blue", 
@@ -267,13 +260,7 @@ plot1_var2
 ```
 
 Distribution of white population percentage across states:
-```{r White Distribution, fig.height=4}
-covid_data %>%
-  ggplot(aes(x = State, y = white_percent)) + geom_point() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(title = 'White population percentate Mobility Changes across states',
-    x = 'State', y = 'White population percentage' )
-```
+
 ```{r White Map, fig.height=3.5, fig.align='center'}
 plot2_var2 = plot_usmap(data = covid_data, values = "white_percent") +
         scale_fill_continuous(low = "white", high = "blue", 
@@ -284,14 +271,6 @@ plot2_var2
 ```
 
 Distribution for percentage of population at risk of serious illness across states:
-```{r Risk Distribution, fig.height=4}
-covid_data %>%
-  ggplot(aes(x = State, y = percent_at_risk)) + geom_point() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(title = 'Percentage of population at risk of serious illness across states',
-    x = 'State', y = 'Percentage of population at risk of serious illness'
-  )
-```
 
 ```{r Risk Map, fig.height=3.5, fig.align='center'}
 plot3_var2 = plot_usmap(data = covid_data, values = "percent_at_risk") +
@@ -341,7 +320,7 @@ For model 4 we will add an additional human controllable variable since we alrea
 
 We choose work mobility here because we think that is one that can be acted upon that could have an impact. On reading about factors of social closeness that matter for COVID-19 transmission or the intensity of the infection caught by someone, a major one is the viral load. This is higher when people are spend long periods of time in closed areas with those carrying the coronavirus. In parks, we are not in closed areas, in retail, there isn't an extended period of time spent since people are coming in and going out more frequently than at work. Grocery and pharmacies are necessities so they cannot be changed much and transit and residential mobility changes are very particular to each city so coming up with a blanket policy or plan to tackle those might be difficult.
 
-$$death\_rate\_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + \beta_3\ percent\_over\_65 $$
+$$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + \beta_3\ percent\_over\_65 $$
 $$+ \beta_4 workpl\_mob\_change + v \tag{Model 4}$$
 
 ```{r Model 4}
@@ -353,7 +332,23 @@ summary(model4)
 We lose statistical significance for *mask_mandate_all* indicating that some of its effect may be shared with the newly added variable *workpl_mob_change*. We can also see that the significance of the *percent_over_65* variable has increase, still not to a statistically significant level. The correlation between *workpl_mob_change* and *white_percent* also seems to have affected the significance that *white_percent*'s coefficient held in the previous model. It has introduced another instability to the model coefficients.
 Practically, we see a small increase in death rate for every unit of increase in *workpl_mob_change* which aligns with our background information - the more people will spend time with others in closed spaces, the more their chances of contracting the virus and that at a higher viral load leading to higher severity of the disease and higher chances of death due to it.
 
-All the coefficients are statistically insignificant, so we're failing to reject the null hypothesis that all these coefficients are 0. That puts us in a difficult situation as it is on the one hand possible that COVID-19 is driven by randomness (such as occurrence of superspreading events). But it is also very possible that there is an impact on the coefficients and their significance due to correlations between the explanatory variables.  We will discuss some of these omitted variables in that section of the report.
+All the coefficients are statistically insignificant, so we're failing to reject the null hypothesis that all these coefficients are 0. That puts us in a difficult situation as it is on the one hand possible that COVID-19 is driven by randomness (such as occurrence of superspreading events). But it is also very possible that there is an impact on the coefficients and their significance due to correlations between the explanatory variables. We will discuss some of these omitted variables in that section of the report.
+
+## Model 5
+
+Let us also add an additional indicator variable for the 3 New England states of Vermont, New Hampshire and Maine. We'll call it `NE_north`.
+
+```{r}
+covid_data$NE_north <- ifelse(covid_data$State %in% 
+                                c("Vermont", "New Hampshire", "Maine"), TRUE, FALSE)
+```
+
+$$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + \beta_3  NE\_north + \beta_4 oct\_temp$$
+
+```{r Model 5}
+model5 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent  + NE_north + temperature, data = covid_data)
+summary(model5)
+```
 
 # Limitations Our Model
 
@@ -487,7 +482,7 @@ According to the Gauss-Markov Theorem under assumptions 1-4 we still have OLS as
 
 ```{r Normality of the Errors}
 hist(model4$residuals, breaks = 40,
-     main = "Residuals from Linear Model 4") # Histogram of the Residuals
+     main = "Residuals from Linear Model 2") # Histogram of the Residuals
 plot(model4, which=2, labels.id = state.name)
 ```
 
