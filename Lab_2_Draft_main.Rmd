@@ -291,9 +291,7 @@ summary(model2)
 
 Here we can see the coefficient of the *mask_mandates* is still statistically significant with a p-value less than 0.05. Practically speaking, it says that having a face mask mandate for all, while controlling the white population percentage, is associated with a reduction of ~0.19 deaths per 100k people per 7 days, or ~1.9 deaths per 1 million people per 7 days. The *white_percent* is not statistically significant with a p-value greater than 0.05. Practically, its effect is that a 1% increase in the percentage of white population would result in 0.3 additional deaths per 100K people per 7 days, or additional 3 deaths per 1 million people per 7 days.
 
-The coefficient for *white_percent* here might not be answering what we want to observe. The data is at state level, not patient, to be able to see the effect of a certain race (or any one different from it) on the death rate. We picked this variable because of background knowledge we gathered about people of color and people in minorities being hit worse by the pandemic than others. It could be reflecting another aspect, may be that more diverse states have more robust health-care systems and service providers which have helped to lower death rate. So we will be cautious about how we use this coefficient to understand our question.
-
-# Models 3 and 4
+The coefficient for *white_percent* here might not be answering what we want to observe. The data is at state level, not at patient to be able to see how the outcome of getting infected may differ from one person to another if they below to different races. We picked this variable because of background knowledge we gathered about people of color and people in minorities being hit worse by the pandemic than others.  States with higher white percentage could have had a higher death rate, it could be reflecting that more diverse states with possibly different political leanings took better precautions - wore their masks, took the pandemic more seriously, causing states with lesser white population percentage to have lower death rates. So we will be cautious about how we use this coefficient to understand our question.
 
 ## Model 3
 
@@ -312,7 +310,7 @@ summary(model3)
 
 The mask mandate for all still remains statistically significant with a slight increase in p-value but still under 0.05. It's practical value in this model is that having a face mask mandate for all, while controlling all the other population parameter variables, is associated with a reduction of ~0.18 deaths per 100k people per 7 days, or ~1.8 deaths per 1 million people per 7 days. The population parameter variables in the model are all statistically not significant with surprising (still not significant) descriptive effects of percentage of population with age over 65 and percentage of population at risk reducing deaths per 100K in 7 days. The lack of significance in *percent_over_65* and *percent_at_risk* could be because of high correlation between them creating instability and not informing us well of either one's effect on the outcome variable. In the next model, we will drop one of these two variables while adding others that may help us describe death rate in last 7 days better.
 
-Surprisingly, the coefficient for *percent_over_65* is negative indicating that more people over 65 in the population would mean lesser death rate in the last 7 dats due to COVID-19. While this could be true, we must again view this with caution because it could not be answering what we are trying to understand. The reason for this discrepancy would be the same as the one we observed in the coefficient for *white_percent* variable, the data is not granular enough to see at patient level and the state level data might be reflecting an effect that is indirectly causing higher population of people over 65 to reduce death rate in the last 7 days.
+Surprisingly, the coefficient for *percent_over_65* is negative indicating that more people over 65 in the population would mean lesser death rate in the last 7 days due to COVID-19. While this could be true, we must again view this with caution because it could not be answering what we are trying to understand. The reason for this discrepancy would be the similar to the one we observed in the coefficient for *white_percent* variable, the data shows us the percentage of population that is over the age of 65 in the entire state. It does not indicate, at a person level, the likelihood of someone over 65 dying once infected versus someone under 65. It is at state level and states with lower percentage of people over 65 could have had a higher death rate in the last 7 days making this coefficient signed the way it is. 
 
 ## Model 4
 
@@ -329,28 +327,37 @@ model4 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent  + percent_o
 summary(model4)
 ```
 
-We lose statistical significance for *mask_mandate_all* indicating that some of its effect may be shared with the newly added variable *workpl_mob_change*. We can also see that the significance of the *percent_over_65* variable has increase, still not to a statistically significant level. The correlation between *workpl_mob_change* and *white_percent* also seems to have affected the significance that *white_percent*'s coefficient held in the previous model. It has introduced another instability to the model coefficients.
+We lose statistical significance for *mask_mandate_all* indicating instability that *workpl_mob_change* may have added in the model.  This could be because *workpl_mob_change* and *mask_mandate_all* have a common causal parent causing *workpl_mob_change* to share some of the effect and reducing that of *mask_mandate_all* . It could also be that *death_rate_in_last7* has a reverse causal relationship on *workpl_mob_change* (increased death rate would encourage people to decrease workplace mobility). 
+We can also see that the significance of the *percent_over_65* variable has increase, still not to a statistically significant level. The correlation between *workpl_mob_change* and *white_percent* also seems to have affected the significance that *white_percent*'s coefficient held in the previous model. This could be due to the political leanings of the states with higher *white_percent* and their view on not taking Covid-19 as seriously. It has introduced another level of instability to the model coefficients.
 Practically, we see a small increase in death rate for every unit of increase in *workpl_mob_change* which aligns with our background information - the more people will spend time with others in closed spaces, the more their chances of contracting the virus and that at a higher viral load leading to higher severity of the disease and higher chances of death due to it.
-
 All the coefficients are statistically insignificant, so we're failing to reject the null hypothesis that all these coefficients are 0. That puts us in a difficult situation as it is on the one hand possible that COVID-19 is driven by randomness (such as occurrence of superspreading events). But it is also very possible that there is an impact on the coefficients and their significance due to correlations between the explanatory variables. We will discuss some of these omitted variables in that section of the report.
 
 ## Model 5
 
-Let us also add an additional indicator variable for the 3 New England states of Vermont, New Hampshire and Maine. We'll call it `NE_north`.
+For model 5, we will add two variables on top of what we had in model2 (to avoid the instabilities bought in by the additional variables in model3 and model4). The two variables are:
+
+1. *temp* -  this reflects the average temperature in the state in October 2020. We care about this because we hypothesize that at higher temperatures, people conducted their social activities outdoors which reduces the risk of infection and of higher viral load in case of infection. With the US being a big country the states would see a good deal of variation in temperature which could explain our outcome variable. We chose only October because we are explaining death rate in the last 7 days, which according to the data are last 7 days of October. To have a more direct impact, we chose the monthly average temperature of October.
+
+2. *NE_north* - this is an  indicator variable for the 3 Northern New England states of Vermont, New Hampshire and Maine. We chose this variable because they have a unique characteristic among states with high *white_percent*. Their political leanings (which we thought were to an extent responsible for the effect *white_percent* has on death rate) are different from other states with high *white_percent*. They are progressive as well as libertarian. They seem to have been lower hit by the pandemic in general so we thought it was worth studying what their effect on our outcome variable would be.
+
 
 ```{r}
 covid_data$NE_north <- ifelse(covid_data$State %in% 
                                 c("Vermont", "New Hampshire", "Maine"), TRUE, FALSE)
 ```
 
-$$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent + \beta_3  NE\_north + \beta_4 oct\_temp$$
+$$death\_rate_7 = \beta_0 + \beta_1 mask\_mandate + \beta_2 white\_percent +$$
+$$\beta_3  NE\_north + \beta_4 oct\_temp + z \tag{Model 5}$$
 
 ```{r Model 5}
-model5 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent  + NE_north + temperature, data = covid_data)
+model5 <- lm(death_rate_in_last7 ~ mask_mandate_all + white_percent  + NE_north + temperature,
+             data = covid_data)
 summary(model5)
 ```
 
-# Limitations Our Model
+What we observe is that firstly, we have a significant coefficient for *mask_mandate_all* because we lost the variables that introduced instability to the model. We see that the *temp* variable is not statistically significant in explaining our outcome variable and practically has a low effect: every 1 degree decrease in temperature would cause 0.0047 more deaths per 100K or 5 more deaths in 100 million. The *NE_north* variable has a significant explanatory effect though, both statistically and practically. It shows that these states have seen a death rate per 100K lower by 0.4, that means 4 lives per 1 million. 
+
+# Assessing assumptions for our Models
 
 1. IID
 
@@ -492,12 +499,13 @@ Here we can see that the errors are somewhat normal with one large outlier (Ohio
 
 # Regression Table
 
-```{r latex output, warning=FALSE, results='asis'}
+```{r latex output reg1, warning=FALSE, results='asis'}
 stargazer(model1,model2, model3, model4,
           type="latex", column.sep.width = "0pt",
           se = list( sqrt(diag(vcovHC(model1))),
-                     sqrt(diag(vcovHC(model2))) ,
-                     sqrt(diag(vcovHC(model3)))) ,
+                     sqrt(diag(vcovHC(model2))),
+                     sqrt(diag(vcovHC(model3))),
+                     sqrt(diag(vcovHC(model4)))) ,
           column.labels = c("model1","model2","model3","model 4"),
           star.char = c(".", "*", "**", "***"),
           star.cutoffs = c(0.1, 0.05, 0.01, 0.001),
@@ -505,7 +513,23 @@ stargazer(model1,model2, model3, model4,
           notes.append=FALSE)
 ```
 
-We see adding more variables decreases the residual standard errors, but not by a large amount. We also see that Adjusted R2 increases a bit from model1 to model2, decreases from model2 to model3, and then increases again in model4. So it indicates that the additional variables in model3 did not help much with the increase fit of the model to the data but those of model4 were helpful. The residuals convey that there are explanations we have not covered in our models that can describe the death rate in 100K in the last 7 days better. We will evaluate some omitted variables that might inform and improve the model.
+We see adding more variables decreases the residual standard errors, but not by a large amount. We also see that Adjusted R2 increases a bit from model1 to model2, decreases from model2 to model3, and then increases again in model4. So it indicates that the additional variables in model3 did not help much with the increase fit of the model to the data but those of model4 were helpful. The residuals convey that there are explanations we have not covered in our models that can describe the death rate in 100K in the last 7 days better. We will now see how the model1, model2, model4, and model5 compare against each other to see what benefit we got from model5. 
+
+```{r latex output reg2, warning=FALSE, results='asis'}
+stargazer(model1,model2,model4,model5,
+          type="latex", column.sep.width = "0pt",
+          se = list( sqrt(diag(vcovHC(model1))),
+                     sqrt(diag(vcovHC(model2))),
+                     sqrt(diag(vcovHC(model4))),
+                     sqrt(diag(vcovHC(model5)))) ,
+          column.labels = c("model1","model2","model4","model5"),
+          star.char = c(".", "*", "**", "***"),
+          star.cutoffs = c(0.1, 0.05, 0.01, 0.001),
+          notes = c(". p<0.1; * p<0.05; ** p<0.01; *** p<0.001"),
+          notes.append=FALSE)
+```
+
+We see a reduced residual standard errors from model4 which gives us confidence in a better set of variables chosen to explain death rate in last 7 days. The improved R^2 and adjusted R62 (improved more widely than between model2 and model4) also add our confidence on model5. 
 
 # Discussion of Omitted Variables
 
