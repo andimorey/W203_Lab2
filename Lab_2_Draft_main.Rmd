@@ -498,7 +498,9 @@ Here we can see that the errors are somewhat normal with one large outlier (Ohio
 stargazer(model1,model2, model3, model4,
           type="latex", column.sep.width = "0pt",
           se = list( sqrt(diag(vcovHC(model1))),sqrt(diag(vcovHC(model2))) ,sqrt(diag(vcovHC(model3)))) ,
-          column.labels = c("model1","model2","model3","model 4"))
+          column.labels = c("model1","model2","model3","model 4"),
+          star.char = c(".", "*", "**", "***"),
+          star.cutoffs = c(0.1, 0.05, 0.01, 0.001))
 ```
 
 We see adding more variables decreases the residual standard errors, but not by a large amount. We also see that Adjusted R2 increases a bit from model1 to model2, decreases from model2 to model3, and then increases again in model4. So it indicates that the additional variables in model3 did not help much with the increase fit of the model to the data but those of model4 were helpful. The residuals convey that there are explanations we have not covered in our models that can describe the death rate in 100K in the last 7 days better. We will evaluate some omitted variables that might inform and improve the model.
