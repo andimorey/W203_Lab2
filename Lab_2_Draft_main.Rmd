@@ -260,7 +260,8 @@ covid_data %>%
 ```
 ```{r Sixty Five Map, fig.height=3.5, fig.align='center'}
 plot1_var2 = plot_usmap(data = covid_data, values = "percent_over_65") +
-        scale_fill_continuous(low = "white", high = "blue", name = "Proportion", label = scales::comma) +
+        scale_fill_continuous(low = "white", high = "blue", 
+                              name = "Proportion", label = scales::comma) +
         theme(legend.position = "right") + labs(title = "Proportion of people over 65")
 plot1_var2
 ```
@@ -275,7 +276,8 @@ covid_data %>%
 ```
 ```{r White Map, fig.height=3.5, fig.align='center'}
 plot2_var2 = plot_usmap(data = covid_data, values = "white_percent") +
-        scale_fill_continuous(low = "white", high = "blue", name = "Proportion", label = scales::comma) +
+        scale_fill_continuous(low = "white", high = "blue", 
+                              name = "Proportion", label = scales::comma) +
         theme(legend.position = "right") +
         labs(title = "Population proportion of non-hispanic whites")
 plot2_var2
@@ -293,7 +295,8 @@ covid_data %>%
 
 ```{r Risk Map, fig.height=3.5, fig.align='center'}
 plot3_var2 = plot_usmap(data = covid_data, values = "percent_at_risk") +
-        scale_fill_continuous(low = "white", high = "blue", name = "Proportion", label = scales::comma) +
+        scale_fill_continuous(low = "white", high = "blue", 
+                              name = "Proportion", label = scales::comma) +
         theme(legend.position = "right") +
         labs(title = "Population proportion at risk of serious illness")
 plot3_var2
@@ -497,7 +500,9 @@ Here we can see that the errors are somewhat normal with one large outlier (Ohio
 ```{r latex output, warning=FALSE, results='asis'}
 stargazer(model1,model2, model3, model4,
           type="latex", column.sep.width = "0pt",
-          se = list( sqrt(diag(vcovHC(model1))),sqrt(diag(vcovHC(model2))) ,sqrt(diag(vcovHC(model3)))) ,
+          se = list( sqrt(diag(vcovHC(model1))),
+                     sqrt(diag(vcovHC(model2))) ,
+                     sqrt(diag(vcovHC(model3)))) ,
           column.labels = c("model1","model2","model3","model 4"),
           star.char = c(".", "*", "**", "***"),
           star.cutoffs = c(0.1, 0.05, 0.01, 0.001))
