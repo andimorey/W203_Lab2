@@ -451,7 +451,7 @@ The correlation table in our EDA gives us a clear indication that we're safe in 
 
 4. Homoskedastic Conditional Errors
 
-This assumption can be affected by issues with assumption 2. If there is a problem with 2, it is likely to show up here as well. Another issue could be skewness of the data. We see in the EDA that there is a bit of skew in the distribution of our outcome variable. Here it seems to not be too bad and we are somewhat safer as we are looking at the death rate over 7 days. Never-the-less, if as we mentioned in 2, there are major discrepancies between states in terms of the exponential growth of the epidemic, there could be orders of magnitude differences in rates and that could be a significant issue. Helpful tools could be transforming the variable (taking a log for example) as well as using robust errors.
+This assumption can be affected by issues with assumption 2. If there is a problem with 2, it is likely to show up here as well. Another issue could be skewness of the data. We see in the EDA that there is a bit of skew in the distribution of our outcome variable. Here it seems to not be too bad and we are somewhat safer as we are looking at the death rate over 7 days. Nevertheless, if as we mentioned in 2, there are major discrepancies between states in terms of the exponential growth of the epidemic, there could be orders of magnitude differences in rates and that could be a significant issue. Helpful tools could be transforming the variable (taking a log for example) as well as using robust errors.
 
 
 ```{r Homoskedastic Conditional Errors, dpi=400, fig.height=3.5, fig.width=6,fig.align='center'}
@@ -472,6 +472,8 @@ lmtest::bptest(model5)
 plot(model5, which=3, labels.id = state.name,
      sub.caption = "Model 5 ACF Plot of the Residuals")
 ```
+
+As seen with all of our models, the p-value of the Breush-Pagan test makes us not reject the null hypothesis that the variance is constant and we meet assumption 4.
 
 5. Normality of the errors
 
