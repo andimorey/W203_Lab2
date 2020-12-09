@@ -249,9 +249,11 @@ Our reasons for considering these three variables are as follows:
 
 *percent_at_risk* - People who have an existing conditions like diabetes or heart disease have seen higher death rates due to either weaker immunity or to the additional damage to blood vessels and organs caused by COVID-19.
 
+
+
 Distribution of *percent_over_65* across states:
 
-```{r Sixty Five Map, fig.height=3.5, fig.align='center'}
+```{r Sixty Five Map, fig.height=3, fig.align='center'}
 plot1_var2 = plot_usmap(data = covid_data, values = "percent_over_65") +
         scale_fill_continuous(low = "white", high = "blue", 
                               name = "Proportion", label = scales::comma) +
@@ -261,7 +263,7 @@ plot1_var2
 
 Distribution of white population percentage across states:
 
-```{r White Map, fig.height=3.5, fig.align='center'}
+```{r White Map, fig.height=3, fig.align='center'}
 plot2_var2 = plot_usmap(data = covid_data, values = "white_percent") +
         scale_fill_continuous(low = "white", high = "blue", 
                               name = "Proportion", label = scales::comma) +
@@ -272,7 +274,7 @@ plot2_var2
 
 Distribution for percentage of population at risk of serious illness across states:
 
-```{r Risk Map, fig.height=3.5, fig.align='center'}
+```{r Risk Map, fig.height=3, fig.align='center'}
 plot3_var2 = plot_usmap(data = covid_data, values = "percent_at_risk") +
         scale_fill_continuous(low = "white", high = "blue", 
                               name = "Proportion", label = scales::comma) +
@@ -292,6 +294,8 @@ summary(model2)
 Here we can see the coefficient of the *mask_mandates* is still statistically significant with a p-value less than 0.05. Practically speaking, it says that having a face mask mandate for all, while controlling the white population percentage, is associated with a reduction of ~0.19 deaths per 100k people per 7 days, or ~1.9 deaths per 1 million people per 7 days. The *white_percent* is not statistically significant with a p-value greater than 0.05. Practically, its effect is that a 1% increase in the percentage of white population would result in 0.3 additional deaths per 100K people per 7 days, or additional 3 deaths per 1 million people per 7 days.
 
 The coefficient for *white_percent* here might not be answering what we want to observe. The data is at state level, not at patient to be able to see how the outcome of getting infected may differ from one person to another if they below to different races. We picked this variable because of background knowledge we gathered about people of color and people in minorities being hit worse by the pandemic than others.  States with higher white percentage could have had a higher death rate, it could be reflecting that more diverse states with possibly different political leanings took better precautions - wore their masks, took the pandemic more seriously, causing states with lesser white population percentage to have lower death rates. So we will be cautious about how we use this coefficient to understand our question.
+
+# Models 3-5
 
 ## Model 3
 
@@ -341,7 +345,7 @@ For model 5, we will add two variables on top of what we had in model2 (to avoid
 2. *NE_north* - this is an  indicator variable for the 3 Northern New England states of Vermont, New Hampshire and Maine. We chose this variable because they have a unique characteristic among states with high *white_percent*. Their political leanings (which we thought were to an extent responsible for the effect *white_percent* has on death rate) are different from other states with high *white_percent*. They are progressive as well as libertarian. They seem to have been lower hit by the pandemic in general so we thought it was worth studying what their effect on our outcome variable would be.
 
 
-```{r}
+```{r Create NE_north data}
 covid_data$NE_north <- ifelse(covid_data$State %in% 
                                 c("Vermont", "New Hampshire", "Maine"), TRUE, FALSE)
 ```
@@ -363,7 +367,7 @@ What we observe is that firstly, we have a significant coefficient for *mask_man
 
 The question here is whether the observations for each different state are IID. One way that assumption might be challenged is because of some type of clustering of conditions in neighboring states for example. While that is a danger and of course some similarities do exist, it seems valid to argue that the connections between states are not such that one state can truly or easily influence the course of the epidemic in another state, either directly through policy (since all state policy is the domain of the local state government) or through demographic factors. That said perhaps travel between well-connected neighboring states can be a source of contagion (e.g. NY/NJ), so we need to be wary, as this impacts the "independent" portion of IID.
 
-```{r IDD Maps, fig.height=9, fig.align='center'}
+```{r IDD Maps, fig.height=8, fig.align='center'}
 plot3 = plot_usmap(data = covid_data, values = "death_rate") +
         scale_fill_continuous(low = "white", high = "dark blue",
                               name = "rate per 100K", label = scales::comma) +
@@ -391,6 +395,8 @@ covid_data <- covid_data %>%  mutate(model3_residuals = resid(model3))
 covid_data <- covid_data %>%  mutate(model3_predictions = predict(model3))
 covid_data <- covid_data %>%  mutate(model4_residuals = resid(model4))
 covid_data <- covid_data %>%  mutate(model4_predictions = predict(model4))
+covid_data <- covid_data %>%  mutate(model5_residuals = resid(model5))
+covid_data <- covid_data %>%  mutate(model5_predictions = predict(model5))
 
 plot_model_2 <- covid_data %>%
   ggplot(aes(x = model2_predictions, y = model2_residuals)) +
@@ -422,53 +428,22 @@ plot_model_4 <- covid_data %>%
     y = 'Model 4 Residuals'
   )
 
+plot_model_5 <- covid_data %>%
+  ggplot(aes(x = model5_predictions, y = model5_residuals)) +
+  geom_point() + stat_smooth(se=TRUE) +
+  labs(
+    title = 'Model 5 Residuals
+    vs. Model 5 Predictions',
+    x = 'Model 5 Predictions',
+    y = 'Model 5 Residuals'
+  )
 
-plot_model_2 | plot_model_3 | plot_model_4
+
+plot_model_2 | plot_model_3 
+plot_model_4 | plot_model_5
 ```
 
-By the occular test, we see that model 4 is the most linear between the predictions and residuals.  We will need to look at the other variables in the models versus the residuals to find where the most noise in our chosen model lies.
-
-```{r Linear Conditional Expectation}
-plot_1 <- covid_data %>%
-  ggplot(aes(x = workpl_mob_change, y = model4_residuals)) +
-  geom_point() + stat_smooth(se=TRUE) +
-  labs(
-    title = 'Model Residuals vs. Workplace Mobility',
-    x = 'Workplace Mobility',
-    y = 'Model Residuals'
-  )
-
-plot_2 <- covid_data %>%
-  ggplot(aes(x = percent_over_65, y = model4_residuals)) +
-  geom_point() + stat_smooth(se=TRUE) +
-  labs(
-    title = 'Model Residuals vs. Percent over 65',
-    x = 'Percent over 65',
-    y = 'Model Residuals'
-  )
-
-plot_3 <- covid_data %>%
-  ggplot(aes(x = white_percent, y = model4_residuals)) +
-  geom_point() + stat_smooth(se=TRUE) +
-  labs(
-    title = 'Model Residuals vs. White Percent',
-    x = 'White Percent',
-    y = 'Model Residuals'
-  )
-
-plot_4 <- covid_data %>%
-  ggplot(aes(x = model4_predictions, y = model4_residuals)) +
-  geom_point() + stat_smooth(se=TRUE) +
-  labs(
-    title = 'Model Residuals vs. Model Predictions',
-    x = 'Model Predictions',
-    y = 'Model Residuals'
-  )
-
-(plot_1 | plot_2) /
-(plot_3 | plot_4)
-```
-
+By the occular test, we see that model 4 is the most linear between the predictions and residuals and meets this assumption.  We get more linear moving from model 2 to 4, and lost linearity with model 5.
 
 3. No perfect Collinearity
 
@@ -478,22 +453,53 @@ The correlation table in our EDA gives us a clear indication that we're safe in 
 
 This assumption can be affected by issues with assumption 2. If there is a problem with 2, it is likely to show up here as well. Another issue could be skewness of the data. We see in the EDA that there is a bit of skew in the distribution of our outcome variable. Here it seems to not be too bad and we are somewhat safer as we are looking at the death rate over 7 days. Never-the-less, if as we mentioned in 2, there are major discrepancies between states in terms of the exponential growth of the epidemic, there could be orders of magnitude differences in rates and that could be a significant issue. Helpful tools could be transforming the variable (taking a log for example) as well as using robust errors.
 
-```{r Homoskedastic Conditional Errors}
+
+```{r Homoskedastic Conditional Errors, dpi=400, fig.height=3.5, fig.width=6,fig.align='center'}
+
+lmtest::bptest(model2)
+plot(model2, which=3, labels.id = state.name,
+     sub.caption = "Model 2 ACF Plot of the Residuals")
+
+lmtest::bptest(model3)
+plot(model3, which=3, labels.id = state.name,
+     sub.caption = "Model 3 ACF Plot of the Residuals")
+
 lmtest::bptest(model4)
-plot(model4, which=3, labels.id = state.name)
+plot(model4, which=3, labels.id = state.name,
+     sub.caption = "Model 4 ACF Plot of the Residuals")
+
+lmtest::bptest(model5)
+plot(model5, which=3, labels.id = state.name,
+     sub.caption = "Model 5 ACF Plot of the Residuals")
 ```
 
 5. Normality of the errors
 
 According to the Gauss-Markov Theorem under assumptions 1-4 we still have OLS as the best linear unbiased estimator. To check the normality of the errors, let's look at the histogram and QQ plot of the model's residuals.
 
-```{r Normality of the Errors}
-hist(model4$residuals, breaks = 40,
+```{r Normality of the Errors, fig.height=4, fig.width=7.5, fig.align='center'}
+hist(model2$residuals, breaks = 40,
      main = "Residuals from Linear Model 2") # Histogram of the Residuals
-plot(model4, which=2, labels.id = state.name)
+plot(model2, which=2, labels.id = state.name,
+     sub.caption = "Model 2 QQ Plot of the Residuals")
+
+hist(model3$residuals, breaks = 40,
+     main = "Residuals from Linear Model 3") # Histogram of the Residuals
+plot(model3, which=2, labels.id = state.name,
+     sub.caption = "Model 3 QQ Plot of the Residuals")
+
+hist(model4$residuals, breaks = 40,
+     main = "Residuals from Linear Model 4") # Histogram of the Residuals
+plot(model4, which=2, labels.id = state.name,
+     sub.caption = "Model 4 QQ Plot of the Residuals")
+
+hist(model5$residuals, breaks = 40,
+     main = "Residuals from Linear Model 5") # Histogram of the Residuals
+plot(model5, which=2, labels.id = state.name,
+     sub.caption = "Model 5 QQ Plot of the Residuals")
 ```
 
-Here we can see that the errors are somewhat normal with one large outlier (Ohio).  It is difficult to get a perfectly normal distribution in such a model with less than 50 degrees of freedom.  This assumption is somewhat met; however, a more robust model could be built at a later time with some transformations. 
+Here we can see that the errors are somewhat normal with one large outlier (Ohio).  It is difficult to get a perfectly normal distribution in such a model with less than 50 degrees of freedom.  This assumption is somewhat met; however, a more robust model could be built at a later time with some transformations or find an indicator variable to make Ohio less of an outlier. 
 
 \newpage
 
@@ -502,10 +508,8 @@ Here we can see that the errors are somewhat normal with one large outlier (Ohio
 ```{r latex output reg1, warning=FALSE, results='asis'}
 stargazer(model1,model2, model3, model4,
           type="latex", column.sep.width = "0pt",
-          se = list( sqrt(diag(vcovHC(model1))),
-                     sqrt(diag(vcovHC(model2))),
-                     sqrt(diag(vcovHC(model3))),
-                     sqrt(diag(vcovHC(model4)))) ,
+          se = list( sqrt(diag(vcovHC(model1))), sqrt(diag(vcovHC(model2))),
+                     sqrt(diag(vcovHC(model3))), sqrt(diag(vcovHC(model4)))) ,
           column.labels = c("model1","model2","model3","model 4"),
           star.char = c(".", "*", "**", "***"),
           star.cutoffs = c(0.1, 0.05, 0.01, 0.001),
@@ -517,11 +521,9 @@ We see adding more variables decreases the residual standard errors, but not by 
 
 ```{r latex output reg2, warning=FALSE, results='asis'}
 stargazer(model1,model2,model4,model5,
-          type="latex", column.sep.width = "0pt",
-          se = list( sqrt(diag(vcovHC(model1))),
-                     sqrt(diag(vcovHC(model2))),
-                     sqrt(diag(vcovHC(model4))),
-                     sqrt(diag(vcovHC(model5)))) ,
+          type="latex", column.sep.width = "0pt", 
+          se = list( sqrt(diag(vcovHC(model1))), sqrt(diag(vcovHC(model2))),
+                     sqrt(diag(vcovHC(model4))), sqrt(diag(vcovHC(model5)))) ,
           column.labels = c("model1","model2","model4","model5"),
           star.char = c(".", "*", "**", "***"),
           star.cutoffs = c(0.1, 0.05, 0.01, 0.001),
